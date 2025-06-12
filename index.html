@@ -10,6 +10,7 @@
       font-family: Arial, sans-serif;
       text-align: center;
       padding: 50px;
+      overflow-x: hidden;
     }
     input, button {
       padding: 10px;
@@ -26,29 +27,102 @@
       color: white;
       cursor: pointer;
     }
+    #avatar {
+      margin-top: 20px;
+      border-radius: 50%;
+      width: 100px;
+      height: 100px;
+      display: none;
+    }
     .success {
       margin-top: 20px;
       color: #00ff00;
       display: none;
     }
+    .notif {
+      position: fixed;
+      bottom: 10px;
+      right: 10px;
+      background: #222;
+      padding: 10px 15px;
+      margin-top: 5px;
+      border-left: 4px solid #00ff00;
+      border-radius: 5px;
+      color: white;
+      opacity: 0;
+      animation: fadeInOut 5s forwards;
+      font-size: 14px;
+    }
+    @keyframes fadeInOut {
+      0% { opacity: 0; transform: translateX(100px); }
+      10% { opacity: 1; transform: translateX(0); }
+      90% { opacity: 1; }
+      100% { opacity: 0; transform: translateX(100px); }
+    }
   </style>
 </head>
 <body>
   <h1>CS:GO Report Bot</h1>
-  <p>Şüpheli Steam profilinin bağlantısını gir:</p>
+  <p>Şüpheli Steam profil bağlantısını gir:</p>
   <input type="text" id="steamURL" placeholder="https://steamcommunity.com/id/kullanici">
   <br>
   <button onclick="sendReport()">Raporla</button>
+  <br>
+  <img id="avatar" src="" alt="Steam Profil Resmi">
   <div id="successMessage" class="success">✅ Rapor başarıyla gönderildi! VAC sistemi işleniyor...</div>
 
+  <div id="notif-container" style="position: fixed; bottom: 10px; right: 10px;"></div>
+
   <script>
-    function sendReport() {
+    const API_KEY = "76465E4406AE7A8863A6EB4FD4FBA5C5";
+
+    async function sendReport() {
       const url = document.getElementById("steamURL").value;
-      if (url.includes("steamcommunity.com")) {
-        document.getElementById("successMessage").style.display = "block";
+      let steamId = "";
+
+      // Steam ID çözümleme
+      if (url.includes("/id/")) {
+        const vanity = url.split("/id/")[1].replace(/\/$/, "");
+        const res = await fetch(`https://api.steampowered.com/ISteamUser/ResolveVanityURL/v1/?key=${API_KEY}&vanityurl=${vanity}`);
+        const data = await res.json();
+        if (data.response.success !== 1) {
+          alert("Geçersiz Steam kullanıcı adı!");
+          return;
+        }
+        steamId = data.response.steamid;
+      } else if (url.includes("/profiles/")) {
+        steamId = url.split("/profiles/")[1].replace(/\/$/, "");
       } else {
-        alert("Lütfen geçerli bir Steam profili gir!");
+        alert("Lütfen geçerli bir Steam bağlantısı girin!");
+        return;
       }
+
+      // Profil resmi çek
+      const res2 = await fetch(`https://api.steampowered.com/ISteamUser/GetPlayerSummaries/v2/?key=${API_KEY}&steamids=${steamId}`);
+      const data2 = await res2.json();
+      const player = data2.response.players[0];
+
+      if (player) {
+        document.getElementById("avatar").src = player.avatarfull;
+        document.getElementById("avatar").style.display = "block";
+        document.getElementById("successMessage").style.display = "block";
+      }
+
+      // Sahte bildirimler oluştur
+      for (let i = 0; i < 20; i++) {
+        setTimeout(() => {
+          const notif = document.createElement("div");
+          notif.className = "notif";
+          notif.innerText = `👤 ${generateRandomName()} başarıyla raporlandı.`;
+          document.getElementById("notif-container").appendChild(notif);
+          setTimeout(() => notif.remove(), 5000);
+        }, i * 600);
+      }
+    }
+
+    function generateRandomName() {
+      const names = ["Z0mbie", "HeadHunter", "VACBanMe", "SniperWolf", "NoScopeGod", "ToxicBoy", "WallH4x", "AFK_Master", "SmurfLord", "EzFragger", "CT_Camper", "BhopKing", "AimBotMan", "OneTapper", "Dust2Only", "P90Rusher", "FlashLord", "NoRecoilX", "NadeSpammer", "VAC_Enjoyer"];
+      return names[Math.floor(Math.random() * names.length)];
     }
   </script>
 </body>
