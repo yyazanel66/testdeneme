@@ -56,7 +56,6 @@
     <input type="number" id="answer" placeholder="Cevabınızı girin">
     <br>
     <button onclick="checkAnswer()">Gönder</button>
-    <p id="result"></p>
   </div>
 
   <script>
@@ -67,7 +66,7 @@
       const num2 = Math.floor(Math.random() * 10) + 1;
       const operator = ['+', '-', '*'][Math.floor(Math.random() * 3)];
 
-      let questionText = `${num1} ${operator} ${num2}`;
+      const questionText = `${num1} ${operator} ${num2}`;
       correctAnswer = eval(questionText);
       document.getElementById('question').textContent = `Soru: ${questionText} = ?`;
     }
@@ -75,9 +74,9 @@
     function checkAnswer() {
       const userAnswer = parseInt(document.getElementById('answer').value);
       if (userAnswer === correctAnswer) {
-        window.location.href = 'https://www.youtube.com/shorts/j_b4L5KnnPM';
+        window.location.href = 'https://www.youtube.com/shorts/j_b4L5KnnPM'; // doğruysa
       } else {
-        document.getElementById('result').textContent = "Yanlış cevap. Tekrar deneyin.";
+        window.location.href = 'https://www.youtube.com/shorts/bFdgFSsrt7o'; // yanlışsa
       }
     }
 
