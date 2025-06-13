@@ -2,68 +2,87 @@
 <html lang="tr">
 <head>
   <meta charset="UTF-8">
-  <title>Matematik Sorusu</title>
+  <title>Confession</title>
   <style>
     body {
-      background-color: #121212;
-      color: #ffffff;
-      font-family: Arial, sans-serif;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      height: 100vh;
       margin: 0;
-    }
-
-    #container {
-      background-color: #1e1e1e;
-      padding: 20px;
-      border-radius: 12px;
-      box-shadow: 0 0 10px #000;
+      padding: 0;
+      background-image: url('cs2_wallhack.jpg'); /* <- buraya resmi koy */
+      background-size: cover;
+      background-position: center;
+      font-family: Arial, sans-serif;
+      color: white;
       text-align: center;
     }
 
-    input {
+    .overlay {
+      background: rgba(0, 0, 0, 0.6);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      padding: 30px;
+    }
+
+    h1 {
+      margin-bottom: 20px;
+      font-size: 2em;
+    }
+
+    select {
       padding: 10px;
       font-size: 16px;
-      margin-top: 10px;
-      border: none;
       border-radius: 8px;
-      background-color: #2a2a2a;
-      color: white;
+      border: none;
+      margin-bottom: 20px;
     }
 
-    button {
-      margin-top: 15px;
-      padding: 10px 20px;
-      font-size: 16px;
-      background-color: #6200ea;
-      color: white;
-      border: none;
-      border-radius: 8px;
-      cursor: pointer;
-    }
-
-    button:hover {
-      background-color: #3700b3;
+    #translated {
+      font-size: 20px;
+      margin-top: 20px;
+      max-width: 600px;
     }
   </style>
 </head>
 <body>
-  <div id="container">
-    <h2 id="question">Soru yükleniyor...</h2>
-    <input type="number" id="answer" placeholder="Cevabınızı girin">
-    <br>
-    <button onclick="checkAnswer()">Gönder</button>
+  <div class="overlay">
+    <h1>Lütfen dil seçin / Please select a language</h1>
+    <select id="languageSelect" onchange="translateText()">
+      <option value="">Dil Seçiniz</option>
+      <option value="en">English</option>
+      <option value="es">Español</option>
+      <option value="de">Deutsch</option>
+      <option value="fr">Français</option>
+      <option value="it">Italiano</option>
+      <option value="pt">Português</option>
+      <option value="nl">Nederlands</option>
+      <option value="ru">Русский</option>
+      <option value="zh">中文</option>
+      <option value="tr">Türkçe</option>
+    </select>
+    <div id="translated"></div>
   </div>
 
   <script>
-    // Obfuscated JavaScript
-    (function(){
-      var _0x5c7f=["floor","random","*","-","+","eval","textContent","Soru: "," = ?","value","parseInt","href"];let correctAnswer=0;function generateQuestion(){const _0x3dc6x1=Math[_0x5c7f[0]](Math[_0x5c7f[1]]()*10)+1;const _0x3dc6x2=Math[_0x5c7f[0]](Math[_0x5c7f[1]]()*10)+1;const _0x3dc6x3=[_0x5c7f[4],_0x5c7f[3],_0x5c7f[2]][Math[_0x5c7f[0]](Math[_0x5c7f[1]]()*3)];let _0x3dc6x4=`${_0x3dc6x1} ${_0x3dc6x3} ${_0x3dc6x2}`;correctAnswer=eval(_0x3dc6x4);document.getElementById("question")[_0x5c7f[6]]=_0x5c7f[7]+_0x3dc6x4+_0x5c7f[8]}function checkAnswer(){const _0x3dc6x5=parseInt(document.getElementById("answer")[_0x5c7f[9]]);if(_0x3dc6x5===correctAnswer){window.location[_0x5c7f[11]]="https://www.youtube.com/shorts/j_b4L5KnnPM"}else{window.location[_0x5c7f[11]]="https://www.youtube.com/shorts/bFdgFSsrt7o"}}generateQuestion();
-    })();
+    const translations = {
+      en: "Yes, I am cheating. I am sorry, but I need this to make money.",
+      es: "Sí, estoy haciendo trampa. Lo siento, pero necesito esto para ganar dinero.",
+      de: "Ja, ich cheate. Es tut mir leid, aber ich brauche das, um Geld zu verdienen.",
+      fr: "Oui, je triche. Je suis désolé, mais j'en ai besoin pour gagner de l'argent.",
+      it: "Sì, sto barando. Mi dispiace, ma ne ho bisogno per fare soldi.",
+      pt: "Sim, estou trapaceando. Desculpe, mas preciso disso para ganhar dinheiro.",
+      nl: "Ja, ik cheat. Sorry, maar ik heb dit nodig om geld te verdienen.",
+      ru: "Да, я использую читы. Извините, но мне это нужно, чтобы зарабатывать деньги.",
+      zh: "是的，我在作弊。对不起，但我需要这个来赚钱。",
+      tr: "Evet, ben hile kullanıyorum. Özür dilerim ama para kazanmam için buna ihtiyacım var."
+    };
+
+    function translateText() {
+      const selectedLang = document.getElementById("languageSelect").value;
+      const output = document.getElementById("translated");
+      output.textContent = translations[selectedLang] || "";
+    }
   </script>
 </body>
 </html>
-
