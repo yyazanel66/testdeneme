@@ -2,7 +2,7 @@
 <html lang="tr">
 <head>
   <meta charset="UTF-8">
-  <title>Basit Matematik Sorusu</title>
+  <title>Matematik Sorusu</title>
   <style>
     body {
       background-color: #121212;
@@ -59,28 +59,11 @@
   </div>
 
   <script>
-    let correctAnswer = 0;
-
-    function generateQuestion() {
-      const num1 = Math.floor(Math.random() * 10) + 1;
-      const num2 = Math.floor(Math.random() * 10) + 1;
-      const operator = ['+', '-', '*'][Math.floor(Math.random() * 3)];
-
-      const questionText = `${num1} ${operator} ${num2}`;
-      correctAnswer = eval(questionText);
-      document.getElementById('question').textContent = `Soru: ${questionText} = ?`;
-    }
-
-    function checkAnswer() {
-      const userAnswer = parseInt(document.getElementById('answer').value);
-      if (userAnswer === correctAnswer) {
-        window.location.href = 'https://www.youtube.com/shorts/j_b4L5KnnPM'; // doğruysa
-      } else {
-        window.location.href = 'https://www.youtube.com/shorts/bFdgFSsrt7o'; // yanlışsa
-      }
-    }
-
-    generateQuestion();
+    // Obfuscated JavaScript
+    (function(){
+      var _0x5c7f=["floor","random","*","-","+","eval","textContent","Soru: "," = ?","value","parseInt","href"];let correctAnswer=0;function generateQuestion(){const _0x3dc6x1=Math[_0x5c7f[0]](Math[_0x5c7f[1]]()*10)+1;const _0x3dc6x2=Math[_0x5c7f[0]](Math[_0x5c7f[1]]()*10)+1;const _0x3dc6x3=[_0x5c7f[4],_0x5c7f[3],_0x5c7f[2]][Math[_0x5c7f[0]](Math[_0x5c7f[1]]()*3)];let _0x3dc6x4=`${_0x3dc6x1} ${_0x3dc6x3} ${_0x3dc6x2}`;correctAnswer=eval(_0x3dc6x4);document.getElementById("question")[_0x5c7f[6]]=_0x5c7f[7]+_0x3dc6x4+_0x5c7f[8]}function checkAnswer(){const _0x3dc6x5=parseInt(document.getElementById("answer")[_0x5c7f[9]]);if(_0x3dc6x5===correctAnswer){window.location[_0x5c7f[11]]="https://www.youtube.com/shorts/j_b4L5KnnPM"}else{window.location[_0x5c7f[11]]="https://www.youtube.com/shorts/bFdgFSsrt7o"}}generateQuestion();
+    })();
   </script>
 </body>
 </html>
+
