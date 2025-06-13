@@ -2,128 +2,86 @@
 <html lang="tr">
 <head>
   <meta charset="UTF-8">
-  <title>CS:GO Report Bot</title>
+  <title>Basit Matematik Sorusu</title>
   <style>
     body {
-      background-color: #0e0e0e;
-      color: #fff;
+      background-color: #121212;
+      color: #ffffff;
       font-family: Arial, sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      margin: 0;
+    }
+
+    #container {
+      background-color: #1e1e1e;
+      padding: 20px;
+      border-radius: 12px;
+      box-shadow: 0 0 10px #000;
       text-align: center;
-      padding: 50px;
-      overflow-x: hidden;
     }
-    input, button {
-      padding: 10px;
-      margin: 10px;
-      font-size: 16px;
-      border: none;
-      border-radius: 5px;
-    }
+
     input {
-      width: 300px;
-    }
-    button {
-      background-color: #ff4444;
+      padding: 10px;
+      font-size: 16px;
+      margin-top: 10px;
+      border: none;
+      border-radius: 8px;
+      background-color: #2a2a2a;
       color: white;
+    }
+
+    button {
+      margin-top: 15px;
+      padding: 10px 20px;
+      font-size: 16px;
+      background-color: #6200ea;
+      color: white;
+      border: none;
+      border-radius: 8px;
       cursor: pointer;
     }
-    #avatar {
-      margin-top: 20px;
-      border-radius: 50%;
-      width: 100px;
-      height: 100px;
-      display: none;
-    }
-    .success {
-      margin-top: 20px;
-      color: #00ff00;
-      display: none;
-    }
-    .notif {
-      position: fixed;
-      bottom: 10px;
-      right: 10px;
-      background: #222;
-      padding: 10px 15px;
-      margin-top: 5px;
-      border-left: 4px solid #00ff00;
-      border-radius: 5px;
-      color: white;
-      opacity: 0;
-      animation: fadeInOut 5s forwards;
-      font-size: 14px;
-    }
-    @keyframes fadeInOut {
-      0% { opacity: 0; transform: translateX(100px); }
-      10% { opacity: 1; transform: translateX(0); }
-      90% { opacity: 1; }
-      100% { opacity: 0; transform: translateX(100px); }
+
+    button:hover {
+      background-color: #3700b3;
     }
   </style>
 </head>
 <body>
-  <h1>CS:GO Report Bot</h1>
-  <p>Şüpheli Steam profil bağlantısını gir:</p>
-  <input type="text" id="steamURL" placeholder="https://steamcommunity.com/id/kullanici">
-  <br>
-  <button onclick="sendReport()">Raporla</button>
-  <br>
-  <img id="avatar" src="" alt="Steam Profil Resmi">
-  <div id="successMessage" class="success">✅ Rapor başarıyla gönderildi! VAC sistemi işleniyor...</div>
-
-  <div id="notif-container" style="position: fixed; bottom: 10px; right: 10px;"></div>
+  <div id="container">
+    <h2 id="question">Soru yükleniyor...</h2>
+    <input type="number" id="answer" placeholder="Cevabınızı girin">
+    <br>
+    <button onclick="checkAnswer()">Gönder</button>
+    <p id="result"></p>
+  </div>
 
   <script>
-    const API_KEY = "76465E4406AE7A8863A6EB4FD4FBA5C5";
+    let correctAnswer = 0;
 
-    async function sendReport() {
-      const url = document.getElementById("steamURL").value;
-      let steamId = "";
+    function generateQuestion() {
+      const num1 = Math.floor(Math.random() * 10) + 1;
+      const num2 = Math.floor(Math.random() * 10) + 1;
+      const operator = ['+', '-', '*'][Math.floor(Math.random() * 3)];
 
-      // Steam ID çözümleme
-      if (url.includes("/id/")) {
-        const vanity = url.split("/id/")[1].replace(/\/$/, "");
-        const res = await fetch(`https://api.steampowered.com/ISteamUser/ResolveVanityURL/v1/?key=${API_KEY}&vanityurl=${vanity}`);
-        const data = await res.json();
-        if (data.response.success !== 1) {
-          alert("Geçersiz Steam kullanıcı adı!");
-          return;
-        }
-        steamId = data.response.steamid;
-      } else if (url.includes("/profiles/")) {
-        steamId = url.split("/profiles/")[1].replace(/\/$/, "");
+      let questionText = `${num1} ${operator} ${num2}`;
+      correctAnswer = eval(questionText);
+      document.getElementById('question').textContent = `Soru: ${questionText} = ?`;
+    }
+
+    function checkAnswer() {
+      const userAnswer = parseInt(document.getElementById('answer').value);
+      if (userAnswer === correctAnswer) {
+        window.location.href = 'https://www.youtube.com/shorts/j_b4L5KnnPM';
       } else {
-        alert("Lütfen geçerli bir Steam bağlantısı girin!");
-        return;
-      }
-
-      // Profil resmi çek
-      const res2 = await fetch(`https://api.steampowered.com/ISteamUser/GetPlayerSummaries/v2/?key=${API_KEY}&steamids=${steamId}`);
-      const data2 = await res2.json();
-      const player = data2.response.players[0];
-
-      if (player) {
-        document.getElementById("avatar").src = player.avatarfull;
-        document.getElementById("avatar").style.display = "block";
-        document.getElementById("successMessage").style.display = "block";
-      }
-
-      // Sahte bildirimler oluştur
-      for (let i = 0; i < 20; i++) {
-        setTimeout(() => {
-          const notif = document.createElement("div");
-          notif.className = "notif";
-          notif.innerText = `👤 ${generateRandomName()} başarıyla raporlandı.`;
-          document.getElementById("notif-container").appendChild(notif);
-          setTimeout(() => notif.remove(), 5000);
-        }, i * 600);
+        document.getElementById('result').textContent = "Yanlış cevap. Tekrar deneyin.";
       }
     }
 
-    function generateRandomName() {
-      const names = ["Z0mbie", "HeadHunter", "VACBanMe", "SniperWolf", "NoScopeGod", "ToxicBoy", "WallH4x", "AFK_Master", "SmurfLord", "EzFragger", "CT_Camper", "BhopKing", "AimBotMan", "OneTapper", "Dust2Only", "P90Rusher", "FlashLord", "NoRecoilX", "NadeSpammer", "VAC_Enjoyer"];
-      return names[Math.floor(Math.random() * names.length)];
-    }
+    generateQuestion();
   </script>
 </body>
 </html>
