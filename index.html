@@ -8,9 +8,9 @@
     body {
       font-family: Arial, sans-serif;
       margin: 0;
-      background: #1e1e1e; 
+      background: #1e1e1e;
       padding: 20px;
-      color: #ffffff; 
+      color: #ffffff;
     }
     h1 {
       text-align: center;
@@ -23,7 +23,7 @@
       margin-top: 30px;
     }
     .product-card {
-      background: #2c2c2c; /* kutular da koyu ton */
+      background: #2c2c2c;
       border-radius: 10px;
       box-shadow: 0 0 15px rgba(0,0,0,0.3);
       padding: 15px;
@@ -49,6 +49,10 @@
       font-size: 15px;
       font-weight: bold;
     }
+    .product-stock {
+      margin-top: 5px;
+      color: #ffd700;
+    }
   </style>
 </head>
 <body>
@@ -56,12 +60,38 @@
   <h1>Mağazamıza Hoş Geldiniz</h1>
 
   <div class="container">
-    <div class="product-card">
-      <img src="kadir1.jpg" alt="SATILIK KUZEN">
-      <div class="product-name">SATILIK KUZEN</div>
+    <!-- Ürün Kartı -->
+    <div class="product-card" id="kulaklik">
+      <img src="kulaklik.jpg" alt="Kablosuz Kulaklık">
+      <div class="product-name">Kablosuz Kulaklık</div>
       <div class="product-price">₺299.90</div>
+      <div class="product-stock">Stok: yükleniyor...</div>
     </div>
   </div>
+
+  <script>
+    async function loadStockData() {
+      const response = await fetch("https://docs.google.com/spreadsheets/d/e/PASTE-YOUR-CSV-LINK-HERE/export?format=csv");
+      const data = await response.text();
+      const rows = data.trim().split("\n").slice(1); // İlk satır başlık
+      const stockMap = {};
+
+      rows.forEach(row => {
+        const [productName, stock] = row.split(",");
+        stockMap[productName.trim()] = stock.trim();
+      });
+
+      // "Kablosuz Kulaklık" için stok güncelle
+      const kulaklikStock = stockMap["Kablosuz Kulaklık"];
+      if (kulaklikStock) {
+        document.querySelector("#kulaklik .product-stock").textContent = "Stok: " + kulaklikStock;
+      } else {
+        document.querySelector("#kulaklik .product-stock").textContent = "Stok bilgisi yok";
+      }
+    }
+
+    loadStockData();
+  </script>
 
 </body>
 </html>
