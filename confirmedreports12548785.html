@@ -5,22 +5,28 @@
   <title>Video Oynatıcı</title>
   <style>
     html, body {
-      margin: 0;
-      padding: 0;
-      height: 100%;
-      background: black;
-      overflow: hidden;
+      margin: 0; padding: 0; height: 100%; background: black; display: flex; justify-content: center; align-items: center; color: white; font-family: Arial, sans-serif;
+    }
+    #startBtn {
+      padding: 15px 30px;
+      font-size: 24px;
+      cursor: pointer;
+      border: none;
+      border-radius: 8px;
+      background-color: #4caf50;
+      color: white;
+      transition: background-color 0.3s;
+    }
+    #startBtn:hover {
+      background-color: #45a049;
     }
     video {
+      display: none;
       position: fixed;
-      top: 50%;
-      left: 50%;
-      min-width: 100%;
-      min-height: 100%;
-      width: auto;
-      height: auto;
+      top: 50%; left: 50%;
+      min-width: 100%; min-height: 100%;
+      width: auto; height: auto;
       transform: translate(-50%, -50%);
-      background: black;
       object-fit: cover;
       z-index: 1;
     }
@@ -28,17 +34,24 @@
 </head>
 <body>
 
-  <video id="myVideo" autoplay playsinline loop>
+  <button id="startBtn">Videoyu Başlat</button>
+
+  <video id="myVideo" playsinline loop>
     <source src="video.mp4" type="video/mp4" />
     Tarayıcınız video etiketini desteklemiyor.
   </video>
 
   <script>
+    const startBtn = document.getElementById('startBtn');
     const video = document.getElementById('myVideo');
-    video.volume = 1.0;  // maksimum ses
-    video.play();
 
-    function openFullscreen() {
+    startBtn.addEventListener('click', () => {
+      startBtn.style.display = 'none';
+      video.style.display = 'block';
+      video.volume = 1.0;
+      video.play();
+
+      // Tam ekran yapmaya çalış
       if (video.requestFullscreen) {
         video.requestFullscreen();
       } else if (video.webkitRequestFullscreen) {
@@ -46,10 +59,6 @@
       } else if (video.msRequestFullscreen) {
         video.msRequestFullscreen();
       }
-    }
-
-    video.addEventListener('canplay', () => {
-      openFullscreen();
     });
   </script>
 
