@@ -60,10 +60,9 @@
   <h1>Mağazamıza Hoş Geldiniz</h1>
 
   <div class="container">
-    <!-- Ürün Kartı -->
     <div class="product-card" id="kulaklik">
-      <img src="kadir1.jpg" alt="SATILIK KUZEN">
-      <div class="product-name">SATILIK KUZEN</div>
+      <img src="kulaklik.jpg" alt="Kablosuz Kulaklık">
+      <div class="product-name">Kablosuz Kulaklık</div>
       <div class="product-price">₺299.90</div>
       <div class="product-stock">Stok: yükleniyor...</div>
     </div>
@@ -71,9 +70,9 @@
 
   <script>
     async function loadStockData() {
-      const response = await fetch("https://docs.google.com/spreadsheets/d/e/PASTE-YOUR-CSV-LINK-HERE/export?format=csv");
+      const response = await fetch("https://docs.google.com/spreadsheets/d/e/2PACX-1vT11LvqIoZUCyjE2nUWpi_G3CQ0ixKeLzCG-steYwXmykA24J_nonJkqZfklUf2nceFVZ-E5V3WT60s/pub?gid=0&single=true&output=csv");
       const data = await response.text();
-      const rows = data.trim().split("\n").slice(1); // İlk satır başlık
+      const rows = data.trim().split("\n").slice(1);
       const stockMap = {};
 
       rows.forEach(row => {
@@ -81,7 +80,6 @@
         stockMap[productName.trim()] = stock.trim();
       });
 
-      // "Kablosuz Kulaklık" için stok güncelle
       const kulaklikStock = stockMap["Kablosuz Kulaklık"];
       if (kulaklikStock) {
         document.querySelector("#kulaklik .product-stock").textContent = "Stok: " + kulaklikStock;
