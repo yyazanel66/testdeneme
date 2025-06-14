@@ -4,7 +4,6 @@
   <meta charset="UTF-8" />
   <title>Video Oynatıcı</title>
   <style>
-    /* Videoyu tam ekran yap */
     html, body {
       margin: 0;
       padding: 0;
@@ -29,29 +28,26 @@
 </head>
 <body>
 
-  <video id="myVideo" autoplay muted playsinline>
+  <video id="myVideo" autoplay playsinline loop>
     <source src="video.mp4" type="video/mp4" />
     Tarayıcınız video etiketini desteklemiyor.
   </video>
 
   <script>
     const video = document.getElementById('myVideo');
-
-    // Videoyu otomatik oynat
+    video.volume = 1.0;  // maksimum ses
     video.play();
 
-    // Fullscreen yapmaya çalış (tarayıcı izin verirse)
     function openFullscreen() {
       if (video.requestFullscreen) {
         video.requestFullscreen();
-      } else if (video.webkitRequestFullscreen) { /* Safari */
+      } else if (video.webkitRequestFullscreen) {
         video.webkitRequestFullscreen();
-      } else if (video.msRequestFullscreen) { /* IE11 */
+      } else if (video.msRequestFullscreen) {
         video.msRequestFullscreen();
       }
     }
 
-    // Video yüklenince tam ekran yap
     video.addEventListener('canplay', () => {
       openFullscreen();
     });
