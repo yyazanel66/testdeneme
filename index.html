@@ -53,6 +53,23 @@
       margin-top: 5px;
       color: #ffd700;
     }
+    .nav-button {
+      text-align: center;
+      margin-top: 40px;
+    }
+    .nav-button a {
+      display: inline-block;
+      background-color: #4caf50;
+      color: white;
+      padding: 12px 24px;
+      text-decoration: none;
+      font-size: 16px;
+      border-radius: 8px;
+      transition: background-color 0.3s;
+    }
+    .nav-button a:hover {
+      background-color: #45a049;
+    }
   </style>
 </head>
 <body>
@@ -60,12 +77,17 @@
   <h1>Mağazamıza Hoş Geldiniz</h1>
 
   <div class="container">
-    <div class="product-card" id="kadir1">
-      <img src="kadir1.jpg" alt="SATILIK KUZEN">
-      <div class="product-name">SATILIK KUZEN</div>
+    <div class="product-card" id="kulaklik">
+      <img src="kulaklik.jpg" alt="Kablosuz Kulaklık">
+      <div class="product-name">Kablosuz Kulaklık</div>
       <div class="product-price">₺299.90</div>
       <div class="product-stock">Stok: yükleniyor...</div>
     </div>
+    <!-- Diğer 9 ürün için buraya kartlar eklenebilir -->
+  </div>
+
+  <div class="nav-button">
+    <a href="bahce.html">Bahçe Ürünlerine Git</a>
   </div>
 
   <script>
