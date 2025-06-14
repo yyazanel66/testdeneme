@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Ürün Vitrini</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      background: #1e1e1e;
+      padding: 20px;
+      color: #ffffff;
+    }
+    h1 {
+      text-align: center;
+      color: #ffffff;
+    }
+    .container {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 20px;
+      margin-top: 30px;
+    }
+    .product-card {
+      background: #2c2c2c;
+      border-radius: 10px;
+      box-shadow: 0 0 15px rgba(0,0,0,0.3);
+      padding: 15px;
+      text-align: center;
+      transition: transform 0.2s;
+    }
+    .product-card:hover {
+      transform: scale(1.03);
+    }
+    .product-card img {
+      max-width: 100%;
+      height: 150px;
+      object-fit: cover;
+      border-radius: 10px;
+    }
+    .product-name {
+      font-size: 16px;
+      margin: 10px 0 5px;
+      color: #f0f0f0;
+    }
+    .product-price {
+      color: #4caf50;
+      font-size: 15px;
+      font-weight: bold;
+    }
+    .product-stock {
+      margin-top: 5px;
+      color: #ffd700;
+    }
+    .nav-button {
+      text-align: center;
+      margin-top: 40px;
+    }
+    .nav-button a {
+      display: inline-block;
+      background-color: #4caf50;
+      color: white;
+      padding: 12px 24px;
+      text-decoration: none;
+      font-size: 16px;
+      border-radius: 8px;
+      transition: background-color 0.3s;
+    }
+    .nav-button a:hover {
+      background-color: #45a049;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>Mağazamıza Hoş Geldiniz</h1>
+
+  <div class="container">
+    <div class="product-card" id="kulaklik">
+      <img src="kadir1.jpg" alt="SATILIK KUZEN">
+      <div class="product-name">SATILIK KUZEN</div>
+      <div class="product-price">₺31.31</div>
+      <div class="product-stock">Stok: yükleniyor...</div>
+    </div>
+    <!-- Diğer 9 ürün için buraya kartlar eklenebilir -->
+  </div>
+
+  <div class="nav-button">
+    <a href="bahce">Bahçe Ürünlerine Git</a>
+  </div>
+
+  <script>
+    async function loadStockData() {
+      const response = await fetch("https://docs.google.com/spreadsheets/d/e/2PACX-1vT11LvqIoZUCyjE2nUWpi_G3CQ0ixKeLzCG-steYwXmykA24J_nonJkqZfklUf2nceFVZ-E5V3WT60s/pub?gid=0&single=true&output=csv");
+      const data = await response.text();
+      const rows = data.trim().split("\n").slice(1);
+      const stockMap = {};
+
+      rows.forEach(row => {
+        const [productName, stock] = row.split(",");
+        stockMap[productName.trim()] = stock.trim();
+      });
+
+      const kulaklikStock = stockMap["Kablosuz Kulaklık"];
+      if (kulaklikStock) {
+        document.querySelector("#kulaklik .product-stock").textContent = "Stok: " + kulaklikStock;
+      } else {
+        document.querySelector("#kulaklik .product-stock").textContent = "Stok bilgisi yok";
+      }
+    }
+
+    loadStockData();
+  </script>
+
+</body>
+</html>
