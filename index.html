@@ -1,117 +1,104 @@
 <!DOCTYPE html>
 <html lang="tr">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Ürün Vitrini</title>
+  <meta charset="UTF-8">
+  <title>Ziyaretçi Kaydı</title>
   <style>
-    body {
-      font-family: Arial, sans-serif;
-      margin: 0;
-      background: #1e1e1e;
-      padding: 20px;
-      color: #ffffff;
-    }
-    h1 {
-      text-align: center;
-      color: #ffffff;
-    }
-    .container {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-      gap: 20px;
-      margin-top: 30px;
-    }
-    .product-card {
-      background: #2c2c2c;
-      border-radius: 10px;
-      box-shadow: 0 0 15px rgba(0,0,0,0.3);
-      padding: 15px;
-      text-align: center;
-      transition: transform 0.2s;
-    }
-    .product-card:hover {
-      transform: scale(1.03);
-    }
-    .product-card img {
-      max-width: 100%;
-      height: 150px;
-      object-fit: cover;
-      border-radius: 10px;
-    }
-    .product-name {
-      font-size: 16px;
-      margin: 10px 0 5px;
-      color: #f0f0f0;
-    }
-    .product-price {
-      color: #4caf50;
-      font-size: 15px;
-      font-weight: bold;
-    }
-    .product-stock {
-      margin-top: 5px;
-      color: #ffd700;
-    }
-    .nav-button {
-      text-align: center;
-      margin-top: 40px;
-    }
-    .nav-button a {
-      display: inline-block;
-      background-color: #4caf50;
-      color: white;
-      padding: 12px 24px;
-      text-decoration: none;
-      font-size: 16px;
-      border-radius: 8px;
-      transition: background-color 0.3s;
-    }
-    .nav-button a:hover {
-      background-color: #45a049;
-    }
+    body { font-family: sans-serif; padding: 2rem; background: #f0f0f0; }
+    input, button { padding: 0.5rem; font-size: 1rem; margin-right: 0.5rem; }
+    table { margin-top: 2rem; border-collapse: collapse; width: 100%; background: white; }
+    th, td { padding: 0.5rem; border: 1px solid #ccc; text-align: left; }
   </style>
 </head>
 <body>
+  <h2>Yazını Gir</h2>
+  <input type="text" id="userInput" placeholder="Boşluğa yaz...">
+  <button onclick="gonder()">Gönder</button>
+  <p id="durum"></p>
 
-  <h1>Mağazamıza Hoş Geldiniz</h1>
-
-  <div class="container">
-    <div class="product-card" id="kulaklik">
-      <img src="kadir1.jpg" alt="SATILIK KUZEN">
-      <div class="product-name">SATILIK KUZEN</div>
-      <div class="product-price">₺31.31</div>
-      <div class="product-stock">Stok: yükleniyor...</div>
-    </div>
-    <!-- Diğer 9 ürün için buraya kartlar eklenebilir -->
-  </div>
-
-  <div class="nav-button">
-    <a href="bahce">Bahçe Ürünlerine Git</a>
-  </div>
+  <h3>Kayıtlı Ziyaretler</h3>
+  <table id="linkTable">
+    <thead>
+      <tr>
+        <th>#</th>
+        <th>Link</th>
+        <th>IP</th>
+        <th>Tarih/Saat</th>
+      </tr>
+    </thead>
+    <tbody></tbody>
+  </table>
 
   <script>
-    async function loadStockData() {
-      const response = await fetch("https://docs.google.com/spreadsheets/d/e/2PACX-1vT11LvqIoZUCyjE2nUWpi_G3CQ0ixKeLzCG-steYwXmykA24J_nonJkqZfklUf2nceFVZ-E5V3WT60s/pub?gid=0&single=true&output=csv");
-      const data = await response.text();
-      const rows = data.trim().split("\n").slice(1);
-      const stockMap = {};
+    const scriptBase = "https://script.google.com/macros/s/AKfycbxnhGTlLR1eYrxz0h2wQBMByINKUhR7llIW5EJo6q6pIwylpHxvxWFE_H0oEjVKiL4rkg";
+    const postURL = scriptBase + "/exec";
+    const getURL = scriptBase + "/exec";
 
-      rows.forEach(row => {
-        const [productName, stock] = row.split(",");
-        stockMap[productName.trim()] = stock.trim();
-      });
+    let ipAddress = "";
 
-      const kulaklikStock = stockMap["Kablosuz Kulaklık"];
-      if (kulaklikStock) {
-        document.querySelector("#kulaklik .product-stock").textContent = "Stok: " + kulaklikStock;
-      } else {
-        document.querySelector("#kulaklik .product-stock").textContent = "Stok bilgisi yok";
+    // Sayfa yüklenince IP ve verileri çek
+    window.onload = async () => {
+      await fetch("https://api.ipify.org?format=json")
+        .then(res => res.json())
+        .then(data => ipAddress = data.ip)
+        .catch(() => ipAddress = "Bilinmiyor");
+
+      kayitlariYukle();
+    };
+
+    function gonder() {
+      const input = document.getElementById("userInput").value.trim();
+      const durum = document.getElementById("durum");
+      if (input === "") {
+        durum.innerText = "Boş yazı gönderilemez.";
+        return;
       }
+
+      const tarihSaat = new Date().toLocaleString("tr-TR");
+
+      fetch(postURL, {
+        method: "POST",
+        body: JSON.stringify({
+          input: input,
+          ip: ipAddress,
+          datetime: tarihSaat
+        }),
+        headers: { "Content-Type": "application/json" }
+      })
+      .then(res => {
+        if (res.ok) {
+          durum.innerText = "Başarıyla kaydedildi!";
+          document.getElementById("userInput").value = "";
+          kayitlariYukle();
+        } else {
+          throw new Error("Gönderme başarısız");
+        }
+      })
+      .catch(err => {
+        durum.innerText = "Hata: " + err.message;
+      });
     }
 
-    loadStockData();
-  </script>
+    function kayitlariYukle() {
+      fetch(getURL)
+        .then(res => res.json())
+        .then(data => {
+          const tbody = document.querySelector("#linkTable tbody");
+          tbody.innerHTML = "";
 
+          data.forEach(kayit => {
+            const tr = document.createElement("tr");
+            tr.innerHTML = `
+              <td>${kayit.id}</td>
+              <td><a href="https://www.istedigimsite.com/${encodeURIComponent(kayit.input)}" target="_blank">${kayit.input}</a></td>
+              <td>${kayit.ip}</td>
+              <td>${kayit.datetime}</td>
+            `;
+            tbody.appendChild(tr);
+          });
+        })
+        .catch(err => console.error("Veri çekme hatası:", err));
+    }
+  </script>
 </body>
 </html>
