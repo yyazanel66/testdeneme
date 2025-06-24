@@ -2,86 +2,102 @@
 <html lang="tr">
 <head>
   <meta charset="UTF-8">
-  <title>Yazı Kaydedici</title>
+  <title>Ziyaretçi Kaydı</title>
   <style>
-    body {
-      font-family: sans-serif;
-      padding: 2rem;
-      background: #f0f0f0;
-    }
-    input, button {
-      padding: 0.5rem;
-      font-size: 1rem;
-      margin-right: 0.5rem;
-    }
-    table {
-      margin-top: 2rem;
-      border-collapse: collapse;
-      width: 100%;
-    }
-    th, td {
-      padding: 0.5rem;
-      border: 1px solid #ccc;
-    }
+    body { font-family: sans-serif; padding: 2rem; background: #f0f0f0; }
+    input, button { padding: 0.5rem; font-size: 1rem; margin-right: 0.5rem; }
+    table { margin-top: 2rem; border-collapse: collapse; width: 100%; background: white; }
+    th, td { padding: 0.5rem; border: 1px solid #ccc; text-align: left; }
   </style>
 </head>
 <body>
-  <h2>Yazını Gir ve Kaydet</h2>
-  <input type="text" id="userInput" placeholder="Örn: merhaba">
+  <h2>Yazını Gir</h2>
+  <input type="text" id="userInput" placeholder="Boşluğa yaz...">
   <button onclick="gonder()">Gönder</button>
   <p id="durum"></p>
 
-  <h3>Oluşan Link</h3>
+  <h3>Kayıtlı Ziyaretler</h3>
   <table id="linkTable">
-    <tr>
-      <th>#</th>
-      <th>Link</th>
-    </tr>
+    <thead>
+      <tr>
+        <th>#</th>
+        <th>Link</th>
+        <th>IP</th>
+        <th>Tarih/Saat</th>
+      </tr>
+    </thead>
+    <tbody></tbody>
   </table>
 
   <script>
-    const scriptURL = "https://script.google.com/macros/s/AKfycbxnhGTlLR1eYrxz0h2wQBMByINKUhR7llIW5EJo6q6pIwylpHxvxWFE_H0oEjVKiL4rkg/exec";
-    let sayac = 1;
+    const scriptBase = "https://script.google.com/macros/s/AKfycbxnhGTlLR1eYrxz0h2wQBMByINKUhR7llIW5EJo6q6pIwylpHxvxWFE_H0oEjVKiL4rkg";
+    const postURL = scriptBase + "/exec";
+    const getURL = scriptBase + "/exec";
+
+    let ipAddress = "";
+
+    // Sayfa yüklenince IP ve verileri çek
+    window.onload = async () => {
+      await fetch("https://api.ipify.org?format=json")
+        .then(res => res.json())
+        .then(data => ipAddress = data.ip)
+        .catch(() => ipAddress = "Bilinmiyor");
+
+      kayitlariYukle();
+    };
 
     function gonder() {
       const input = document.getElementById("userInput").value.trim();
       const durum = document.getElementById("durum");
-
       if (input === "") {
-        durum.innerText = "Lütfen boş bırakmayın.";
+        durum.innerText = "Boş yazı gönderilemez.";
         return;
       }
 
-      const veri = { input: input };
+      const tarihSaat = new Date().toLocaleString("tr-TR");
 
-      fetch(scriptURL, {
+      fetch(postURL, {
         method: "POST",
-        body: JSON.stringify(veri),
+        body: JSON.stringify({
+          input: input,
+          ip: ipAddress,
+          datetime: tarihSaat
+        }),
         headers: { "Content-Type": "application/json" }
       })
-      .then(response => {
-        if (response.ok) {
+      .then(res => {
+        if (res.ok) {
           durum.innerText = "Başarıyla kaydedildi!";
-          tabloyaEkle(input);
           document.getElementById("userInput").value = "";
+          kayitlariYukle();
         } else {
           throw new Error("Gönderme başarısız");
         }
       })
-      .catch(error => {
-        durum.innerText = "Hata: " + error.message;
+      .catch(err => {
+        durum.innerText = "Hata: " + err.message;
       });
     }
 
-    function tabloyaEkle(metin) {
-      const table = document.getElementById("linkTable");
-      const row = table.insertRow();
-      const cell1 = row.insertCell(0);
-      const cell2 = row.insertCell(1);
-      const url = "https://www.istedigimsite.com/" + encodeURIComponent(metin);
+    function kayitlariYukle() {
+      fetch(getURL)
+        .then(res => res.json())
+        .then(data => {
+          const tbody = document.querySelector("#linkTable tbody");
+          tbody.innerHTML = "";
 
-      cell1.innerText = sayac++;
-      cell2.innerHTML = `<a href="${url}" target="_blank">${url}</a>`;
+          data.forEach(kayit => {
+            const tr = document.createElement("tr");
+            tr.innerHTML = `
+              <td>${kayit.id}</td>
+              <td><a href="https://www.istedigimsite.com/${encodeURIComponent(kayit.input)}" target="_blank">${kayit.input}</a></td>
+              <td>${kayit.ip}</td>
+              <td>${kayit.datetime}</td>
+            `;
+            tbody.appendChild(tr);
+          });
+        })
+        .catch(err => console.error("Veri çekme hatası:", err));
     }
   </script>
 </body>
