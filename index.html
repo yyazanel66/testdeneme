@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="tr">
 <head>
-  <meta charset="UTF-8">
+  <meta charset="UTF-8" />
   <title>Ziyaretçi Kaydı</title>
   <style>
     body { font-family: sans-serif; padding: 2rem; background: #f0f0f0; }
@@ -12,7 +12,7 @@
 </head>
 <body>
   <h2>Yazını Gir</h2>
-  <input type="text" id="userInput" placeholder="Boşluğa yaz...">
+  <input type="text" id="userInput" placeholder="Boşluğa yaz..." />
   <button onclick="gonder()">Gönder</button>
   <p id="durum"></p>
 
@@ -30,18 +30,21 @@
   </table>
 
   <script>
-    const scriptBase = "https://script.google.com/macros/library/d/1xAcAXVSjsZQ1Z44buWpKYMx4Z7vml07_5APvfKCt6AQ8jjmnIEDwwSFW/1";  // 
-    const postURL = scriptBase + "/exec";   //https://script.google.com/macros/s/AKfycbxnhGTlLR1eYrxz0h2wQBMByINKUhR7llIW5EJo6q6pIwylpHxvxWFE_H0oEjVKiL4rkg
+    // Buraya kendi Apps Script exec URL'ni yapıştır
+    const scriptBase = "https://script.googleusercontent.com/macros/echo?user_content_key=AehSKLhS2-5xLRL1dwX-XQSI-a5Uh01_s6dsY4AuFrLvYy-uDa0BhYDsrSvX4pwIRPQU1JHGxw3iQqj2UcJhXeqOWVcDpdgmr4CgNKt3AGeg4aY8McnBuJ2TMW_kRjTtitvul-RFRWPf3Yvz36i3SusD--SkKCSXV3EibYpTetNy05d1CcJyRiNX0GzB0auXgPZIcgJ2Z1ibYZiYX23-q-zMCp0hsdkvhSNVFB33rFX1cvofPBh_Ict035QkZEhTS4B1OAm8ZpqXgcj8QQ5mmRvSW8xXp8-W59GkgKeasF7t&lib=MsfWbqPKbiXbaJWkGsu9q8RL3LQjWYkv8"; 
+    const postURL = scriptBase + "/exec";
     const getURL = scriptBase + "/exec";
 
     let ipAddress = "";
 
-    // Sayfa yüklenince IP ve verileri çek
     window.onload = async () => {
-      await fetch("https://api.ipify.org?format=json")
-        .then(res => res.json())
-        .then(data => ipAddress = data.ip)
-        .catch(() => ipAddress = "Bilinmiyor");
+      try {
+        const res = await fetch("https://api.ipify.org?format=json");
+        const data = await res.json();
+        ipAddress = data.ip;
+      } catch {
+        ipAddress = "Bilinmiyor";
+      }
 
       kayitlariYukle();
     };
@@ -97,7 +100,9 @@
             tbody.appendChild(tr);
           });
         })
-        .catch(err => console.error("Veri çekme hatası:", err));
+        .catch(err => {
+          console.error("Veri çekme hatası:", err);
+        });
     }
   </script>
 </body>
