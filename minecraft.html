@@ -2,102 +2,140 @@
 <html lang="tr">
 <head>
   <meta charset="UTF-8">
-  <title>Ziyaretçi Kaydı</title>
+  <title>Kalpli Kutlama</title>
   <style>
-    body { font-family: sans-serif; padding: 2rem; background: #f0f0f0; }
-    input, button { padding: 0.5rem; font-size: 1rem; margin-right: 0.5rem; }
-    table { margin-top: 2rem; border-collapse: collapse; width: 100%; background: white; }
-    th, td { padding: 0.5rem; border: 1px solid #ccc; text-align: left; }
+    html, body {
+      margin: 0;
+      padding: 0;
+      overflow: hidden;
+      background: #000;
+      color: white;
+      font-family: sans-serif;
+      text-align: center;
+    }
+    #canvas {
+      position: absolute;
+      top: 0;
+      left: 0;
+    }
+    #message {
+      position: absolute;
+      top: 40%;
+      width: 100%;
+      font-size: 3em;
+      z-index: 10;
+    }
+    #countdown {
+      font-size: 2em;
+      margin-top: 20px;
+    }
+    .confetti {
+      position: absolute;
+      width: 10px;
+      height: 10px;
+      background-color: hsl(var(--hue), 100%, 50%);
+      animation: fall 3s linear infinite;
+    }
+
+    @keyframes fall {
+      to {
+        transform: translateY(100vh) rotate(360deg);
+        opacity: 0;
+      }
+    }
   </style>
 </head>
 <body>
-  <h2>Yazını Gir</h2>
-  <input type="text" id="userInput" placeholder="Boşluğa yaz...">
-  <button onclick="gonder()">Gönder</button>
-  <p id="durum"></p>
-
-  <h3>Kayıtlı Ziyaretler</h3>
-  <table id="linkTable">
-    <thead>
-      <tr>
-        <th>#</th>
-        <th>Link</th>
-        <th>IP</th>
-        <th>Tarih/Saat</th>
-      </tr>
-    </thead>
-    <tbody></tbody>
-  </table>
+  <canvas id="canvas"></canvas>
+  <div id="message">
+    Hazır mısınız?
+    <div id="countdown"></div>
+  </div>
 
   <script>
-    const scriptBase = "https://script.google.com/macros/s/AKfycbxnhGTlLR1eYrxz0h2wQBMByINKUhR7llIW5EJo6q6pIwylpHxvxWFE_H0oEjVKiL4rkg";
-    const postURL = scriptBase + "/exec";
-    const getURL = scriptBase + "/exec";
+    const canvas = document.getElementById('canvas');
+    const ctx = canvas.getContext('2d');
+    let width, height;
+    let points = [];
+    const heartPoints = [];
 
-    let ipAddress = "";
-
-    // Sayfa yüklenince IP ve verileri çek
-    window.onload = async () => {
-      await fetch("https://api.ipify.org?format=json")
-        .then(res => res.json())
-        .then(data => ipAddress = data.ip)
-        .catch(() => ipAddress = "Bilinmiyor");
-
-      kayitlariYukle();
-    };
-
-    function gonder() {
-      const input = document.getElementById("userInput").value.trim();
-      const durum = document.getElementById("durum");
-      if (input === "") {
-        durum.innerText = "Boş yazı gönderilemez.";
-        return;
-      }
-
-      const tarihSaat = new Date().toLocaleString("tr-TR");
-
-      fetch(postURL, {
-        method: "POST",
-        body: JSON.stringify({
-          input: input,
-          ip: ipAddress,
-          datetime: tarihSaat
-        }),
-        headers: { "Content-Type": "application/json" }
-      })
-      .then(res => {
-        if (res.ok) {
-          durum.innerText = "Başarıyla kaydedildi!";
-          document.getElementById("userInput").value = "";
-          kayitlariYukle();
-        } else {
-          throw new Error("Gönderme başarısız");
-        }
-      })
-      .catch(err => {
-        durum.innerText = "Hata: " + err.message;
-      });
+    function resize() {
+      width = canvas.width = window.innerWidth;
+      height = canvas.height = window.innerHeight;
     }
 
-    function kayitlariYukle() {
-      fetch(getURL)
-        .then(res => res.json())
-        .then(data => {
-          const tbody = document.querySelector("#linkTable tbody");
-          tbody.innerHTML = "";
+    window.addEventListener('resize', resize);
+    resize();
 
-          data.forEach(kayit => {
-            const tr = document.createElement("tr");
-            tr.innerHTML = `
-              <td>${kayit.id}</td>
-              <td><a href="https://www.istedigimsite.com/${encodeURIComponent(kayit.input)}" target="_blank">${kayit.input}</a></td>
-              <td>${kayit.ip}</td>
-              <td>${kayit.datetime}</td>
-            `;
-            tbody.appendChild(tr);
-          });
-        })
-        .catch(err => console.error("Veri çekme hatası:", err));
+    // Kalp formülü: https://mathworld.wolfram.com/HeartCurve.html
+    for (let i = 0; i < 1000; i++) {
+      let t = Math.PI * 2 * (i / 1000);
+      let x = 16 * Math.pow(Math.sin(t), 3);
+      let y = 13 * Math.cos(t) - 5 * Math.cos(2*t) - 2 * Math.cos(3*t) - Math.cos(4*t);
+      x *= 20;
+      y *= 20;
+      heartPoints.push({ x: x, y: -y }); // y eksenini ters çevir
+    }
+
+    // Ortası boş kalp için noktaları filtrele
+    for (let i = 0; i < heartPoints.length; i++) {
+      let p = heartPoints[i];
+      let d = Math.sqrt(p.x*p.x + p.y*p.y);
+      if (d > 100) {
+        points.push({
+          x: p.x + width / 2,
+          y: p.y + height / 2,
+          size: Math.random() * 2 + 1,
+          baseX: p.x + width / 2,
+          baseY: p.y + height / 2,
+          angle: Math.random() * Math.PI * 2
+        });
+      }
+    }
+
+    function animate() {
+      ctx.clearRect(0, 0, width, height);
+      for (let p of points) {
+        p.angle += 0.05;
+        let dx = Math.sin(p.angle) * 2;
+        let dy = Math.cos(p.angle) * 2;
+        ctx.beginPath();
+        ctx.arc(p.baseX + dx, p.baseY + dy, p.size, 0, Math.PI * 2);
+        ctx.fillStyle = 'pink';
+        ctx.fill();
+      }
+      requestAnimationFrame(animate);
+    }
+
+    animate();
+
+    // Geri sayım
+    const countdownEl = document.getElementById('countdown');
+    let count = 5;
+
+    setTimeout(() => {
+      const interval = setInterval(() => {
+        countdownEl.textContent = count;
+        count--;
+        if (count < 0) {
+          clearInterval(interval);
+          countdownEl.textContent = '';
+          document.getElementById('message').textContent = '🎉 HAYIRLI OLSUN 🎉';
+          showConfetti();
+        }
+      }, 1000);
+    }, 1000); // 1 saniye sonra başla
+
+    function showConfetti() {
+      for (let i = 0; i < 200; i++) {
+        const div = document.createElement('div');
+        div.classList.add('confetti');
+        div.style.left = Math.random() * window.innerWidth + 'px';
+        div.style.top = Math.random() * -window.innerHeight + 'px';
+        div.style.setProperty('--hue', Math.floor(Math.random() * 360));
+        document.body.appendChild(div);
+        setTimeout(() => div.remove(), 3000);
+      }
     }
   </script>
 </body>
