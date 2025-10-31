@@ -2,108 +2,65 @@
 <html lang="tr">
 <head>
   <meta charset="UTF-8" />
-  <title>Ziyaretçi Kaydı</title>
+  <title>Yasemin Ban Yeme Anı</title>
   <style>
-    body { font-family: sans-serif; padding: 2rem; background: #f0f0f0; }
-    input, button { padding: 0.5rem; font-size: 1rem; margin-right: 0.5rem; }
-    table { margin-top: 2rem; border-collapse: collapse; width: 100%; background: white; }
-    th, td { padding: 0.5rem; border: 1px solid #ccc; text-align: left; }
+    html, body {
+      margin: 0; padding: 0; height: 100%; background: black; display: flex; justify-content: center; align-items: center; color: white; font-family: Arial, sans-serif;
+    }
+    #startBtn {
+      padding: 15px 30px;
+      font-size: 24px;
+      cursor: pointer;
+      border: none;
+      border-radius: 8px;
+      background-color: #4caf50;
+      color: white;
+      transition: background-color 0.3s;
+    }
+    #startBtn:hover {
+      background-color: #45a049;
+    }
+    video {
+      display: none;
+      position: fixed;
+      top: 50%; left: 50%;
+      min-width: 100%; min-height: 100%;
+      width: auto; height: auto;
+      transform: translate(-50%, -50%);
+      object-fit: cover;
+      z-index: 1;
+    }
   </style>
 </head>
 <body>
-  <h2>Yazını Gir</h2>
-  <input type="text" id="userInput" placeholder="Boşluğa yaz..." />
-  <button onclick="gonder()">Gönder</button>
-  <p id="durum"></p>
 
-  <h3>Kayıtlı Ziyaretler</h3>
-  <table id="linkTable">
-    <thead>
-      <tr>
-        <th>#</th>
-        <th>Link</th>
-        <th>IP</th>
-        <th>Tarih/Saat</th>
-      </tr>
-    </thead>
-    <tbody></tbody>
-  </table>
+  <button id="startBtn">See Reports</button>
+
+  <video id="myVideo" playsinline loop>
+    <source src="video.mp4" type="video/mp4" />
+    Tarayıcınız video etiketini desteklemiyor.
+  </video>
 
   <script>
-    // Buraya kendi Apps Script exec URL'ni yapıştır
-    const scriptBase = "https://script.googleusercontent.com/macros/echo?user_content_key=AehSKLhS2-5xLRL1dwX-XQSI-a5Uh01_s6dsY4AuFrLvYy-uDa0BhYDsrSvX4pwIRPQU1JHGxw3iQqj2UcJhXeqOWVcDpdgmr4CgNKt3AGeg4aY8McnBuJ2TMW_kRjTtitvul-RFRWPf3Yvz36i3SusD--SkKCSXV3EibYpTetNy05d1CcJyRiNX0GzB0auXgPZIcgJ2Z1ibYZiYX23-q-zMCp0hsdkvhSNVFB33rFX1cvofPBh_Ict035QkZEhTS4B1OAm8ZpqXgcj8QQ5mmRvSW8xXp8-W59GkgKeasF7t&lib=MsfWbqPKbiXbaJWkGsu9q8RL3LQjWYkv8"; 
-    const postURL = scriptBase + "/exec";
-    const getURL = scriptBase + "/exec";
+    const startBtn = document.getElementById('startBtn');
+    const video = document.getElementById('myVideo');
 
-    let ipAddress = "";
+    startBtn.addEventListener('click', () => {
+      startBtn.style.display = 'none';
+      video.style.display = 'block';
+      video.volume = 1.0;
+      video.play();
 
-    window.onload = async () => {
-      try {
-        const res = await fetch("https://api.ipify.org?format=json");
-        const data = await res.json();
-        ipAddress = data.ip;
-      } catch {
-        ipAddress = "Bilinmiyor";
+      // Tam ekran yapmaya çalış
+      if (video.requestFullscreen) {
+        video.requestFullscreen();
+      } else if (video.webkitRequestFullscreen) {
+        video.webkitRequestFullscreen();
+      } else if (video.msRequestFullscreen) {
+        video.msRequestFullscreen();
       }
-
-      kayitlariYukle();
-    };
-
-    function gonder() {
-      const input = document.getElementById("userInput").value.trim();
-      const durum = document.getElementById("durum");
-      if (input === "") {
-        durum.innerText = "Boş yazı gönderilemez.";
-        return;
-      }
-
-      const tarihSaat = new Date().toLocaleString("tr-TR");
-
-      fetch(postURL, {
-        method: "POST",
-        body: JSON.stringify({
-          input: input,
-          ip: ipAddress,
-          datetime: tarihSaat
-        }),
-        headers: { "Content-Type": "application/json" }
-      })
-      .then(res => {
-        if (res.ok) {
-          durum.innerText = "Başarıyla kaydedildi!";
-          document.getElementById("userInput").value = "";
-          kayitlariYukle();
-        } else {
-          throw new Error("Gönderme başarısız");
-        }
-      })
-      .catch(err => {
-        durum.innerText = "Hata: " + err.message;
-      });
-    }
-
-    function kayitlariYukle() {
-      fetch(getURL)
-        .then(res => res.json())
-        .then(data => {
-          const tbody = document.querySelector("#linkTable tbody");
-          tbody.innerHTML = "";
-
-          data.forEach(kayit => {
-            const tr = document.createElement("tr");
-            tr.innerHTML = `
-              <td>${kayit.id}</td>
-              <td><a href="https://www.istedigimsite.com/${encodeURIComponent(kayit.input)}" target="_blank">${kayit.input}</a></td>
-              <td>${kayit.ip}</td>
-              <td>${kayit.datetime}</td>
-            `;
-            tbody.appendChild(tr);
-          });
-        })
-        .catch(err => {
-          console.error("Veri çekme hatası:", err);
-        });
-    }
+    });
   </script>
+
 </body>
 </html>
