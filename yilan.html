@@ -1,1 +1,545 @@
 
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Şık Yılan Oyunu</title>
+<style>
+  :root{
+    --bg:#0f1724;
+    --panel:#071024;
+    --accent1:#ffd166;
+    --accent2:#06d6a0;
+    --muted:#94a3b8;
+  }
+  html,body{height:100%;margin:0;font-family:Inter,Segoe UI,Roboto,'Helvetica Neue',Arial;background: radial-gradient(1200px 800px at 10% 10%, rgba(6,22,36,0.6), transparent), radial-gradient(900px 600px at 90% 90%, rgba(8,34,50,0.5), transparent), var(--bg); color:#dbeafe}
+  .wrap{min-height:100%;display:flex;gap:20px;align-items:center;justify-content:center;padding:32px;box-sizing:border-box}
+  .card{
+    background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
+    border-radius:18px;padding:18px;box-shadow:0 10px 30px rgba(2,6,23,0.6), inset 0 1px 0 rgba(255,255,255,0.02);
+    display:flex;gap:18px;align-items:center;
+  }
+  canvas{border-radius:12px;display:block;background:
+    linear-gradient(180deg, rgba(255,255,255,0.02), rgba(0,0,0,0.05));
+    box-shadow: 0 8px 20px rgba(2,6,23,0.7);
+  }
+  .sidebar{width:260px;display:flex;flex-direction:column;gap:12px}
+  h1{font-size:18px;margin:0;color:var(--accent1)}
+  .controls{font-size:13px;color:var(--muted)}
+  .btn{
+    background:linear-gradient(180deg, rgba(255,255,255,0.03), rgba(255,255,255,0.01));
+    border-radius:10px;padding:10px 12px;border:1px solid rgba(255,255,255,0.03);cursor:pointer;color:#e6eef8;font-weight:600;
+    box-shadow: 0 6px 18px rgba(2,6,23,0.5);
+  }
+  .btn:active{transform:translateY(1px);box-shadow:0 3px 10px rgba(2,6,23,0.45)}
+  .row{display:flex;gap:8px;align-items:center}
+  .stat{background:linear-gradient(180deg, rgba(255,255,255,0.01), rgba(255,255,255,0.00));border-radius:10px;padding:12px;color:#dbeafe}
+  .small{font-size:12px;color:var(--muted)}
+  .scorebig{font-size:28px;color:var(--accent2);font-weight:800;letter-spacing:0.6px}
+  .hud{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
+  .footer{font-size:12px;color:var(--muted);text-align:center;margin-top:8px}
+  /* Mobile touch pad */
+  .touchpad{display:none;margin-top:6px;gap:6px}
+  .touchpad button{flex:1;padding:10px;border-radius:10px;border:0;background:rgba(255,255,255,0.02);font-weight:700}
+  @media (max-width:900px){
+    .wrap{padding:12px}
+    .sidebar{width:100%}
+    .card{flex-direction:column;align-items:stretch;width:100%}
+    .touchpad{display:flex}
+    canvas{width:100%;height:auto}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="card" style="align-items:flex-start">
+    <canvas id="game" width="600" height="600"></canvas>
+    <div class="sidebar">
+      <div class="hud">
+        <div>
+          <h1>Yılan (Şık)</h1>
+          <div class="small">Sağ/sol oklar veya WASD ile oynayın. Dokunmatik destekli.</div>
+        </div>
+        <div style="text-align:right">
+          <div class="small">Skor</div>
+          <div class="scorebig" id="score">0</div>
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="stat" style="flex:1">
+          <div class="small">En yüksek</div>
+          <div style="font-size:20px;font-weight:700;color:var(--accent1)" id="best">0</div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:8px">
+          <button class="btn" id="startBtn">Başlat</button>
+          <button class="btn" id="pauseBtn">Duraklat</button>
+        </div>
+      </div>
+
+      <div class="stat">
+        <div class="small">Hız</div>
+        <input id="speed" type="range" min="4" max="16" value="9" />
+        <div class="small">Yemekler: <span id="foodCount">0</span></div>
+      </div>
+
+      <div class="stat">
+        <div class="small">Açıklama</div>
+        <div style="margin-top:6px">Yılanı büyütmek için yemi ye. Kenara çarpınca oyun biter. Mobilde sürükle/şip ile yön değiştir.</div>
+      </div>
+
+      <div class="touchpad">
+        <button id="up">▲</button>
+        <button id="left">◀</button>
+        <button id="down">▼</button>
+        <button id="right">▶</button>
+      </div>
+
+      <div class="footer">Kopyala-yapıştır. Yaptığın mükemmel oyunları bana göster :)</div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ------------------ Ayarlar ------------------
+const canvas = document.getElementById('game');
+const ctx = canvas.getContext('2d', { alpha: false });
+const scoreEl = document.getElementById('score');
+const bestEl = document.getElementById('best');
+const startBtn = document.getElementById('startBtn');
+const pauseBtn = document.getElementById('pauseBtn');
+const speedRange = document.getElementById('speed');
+const foodCountEl = document.getElementById('foodCount');
+
+const CELL_SIZE = 20; // grid hücre boyutu
+let COLS = Math.floor(canvas.width / CELL_SIZE);
+let ROWS = Math.floor(canvas.height / CELL_SIZE);
+
+// responsive canvas scale
+function resizeCanvas() {
+  const rect = canvas.getBoundingClientRect();
+  // keep internal resolution fixed for crispness, but scale CSS size
+  const scale = Math.min(window.innerWidth - 120, 720);
+  canvas.style.width = Math.min(scale, 720) + 'px';
+  canvas.style.height = canvas.style.width;
+}
+window.addEventListener('resize', resizeCanvas);
+resizeCanvas();
+
+// ------------------ Oyun değişkenleri ------------------
+let snake = [{x: Math.floor(COLS/2), y: Math.floor(ROWS/2)}];
+let dir = {x:1,y:0};
+let nextDir = dir;
+let food = null;
+let particles = [];
+let score = 0;
+let best = +localStorage.getItem('snakeBestV1') || 0;
+bestEl.textContent = best;
+let running = false;
+let paused = false;
+let tickInterval = 1200 / speedRange.value; // ms per move, will be updated
+let lastTick = 0;
+let foodCollected = 0;
+
+// ------------------ Yardımcı fonksiyonlar ------------------
+function randInt(a,b){ return Math.floor(Math.random()*(b-a+1))+a; }
+function placeFood(){
+  // rastgele boş hücreye koy
+  const occupied = new Set(snake.map(s=>s.x+','+s.y));
+  let tries = 0;
+  while(tries < 1000){
+    const fx = randInt(1, COLS-2);
+    const fy = randInt(1, ROWS-2);
+    if(!occupied.has(fx+','+fy)){
+      food = {x:fx, y:fy, born: performance.now()};
+      foodCollected = (foodCollected||0);
+      foodCountEl.textContent = ++foodCollected;
+      break;
+    }
+    tries++;
+  }
+}
+
+// ------------------ GFX: yuvarlak köşeli blok çizimi ------------------
+function drawRoundedCell(x,y, size, radius, fillStyle, strokeStyle){
+  const px = x * CELL_SIZE;
+  const py = y * CELL_SIZE;
+  ctx.save();
+  ctx.beginPath();
+  const r = Math.min(radius,size/2);
+  ctx.moveTo(px + r, py);
+  ctx.arcTo(px + size, py, px + size, py + size, r);
+  ctx.arcTo(px + size, py + size, px, py + size, r);
+  ctx.arcTo(px, py + size, px, py, r);
+  ctx.arcTo(px, py, px + size, py, r);
+  ctx.closePath();
+  if(fillStyle){
+    ctx.fillStyle = fillStyle;
+    ctx.fill();
+  }
+  if(strokeStyle){
+    ctx.strokeStyle = strokeStyle;
+    ctx.lineWidth = Math.max(1, size*0.06);
+    ctx.stroke();
+  }
+  ctx.restore();
+}
+
+// ------------------ Parçacık efekti ------------------
+function spawnParticles(centerX, centerY, color){
+  for(let i=0;i<18;i++){
+    particles.push({
+      x: centerX + CELL_SIZE/2,
+      y: centerY + CELL_SIZE/2,
+      vx: (Math.random()-0.5)*3,
+      vy: (Math.random()-0.6)*-3,
+      life: randInt(400,900),
+      born: performance.now(),
+      r: randInt(2,5),
+      color
+    })
+  }
+}
+function updateParticles(dt){
+  const now = performance.now();
+  particles = particles.filter(p=>{
+    const t = now - p.born;
+    if(t > p.life) return false;
+    p.x += p.vx * (dt/16);
+    p.y += p.vy * (dt/16);
+    p.vy += 0.06 * (dt/16); // gravity
+    return true;
+  })
+}
+function drawParticles(){
+  for(const p of particles){
+    const age = (performance.now() - p.born) / p.life;
+    ctx.globalAlpha = 1 - age;
+    ctx.beginPath();
+    ctx.fillStyle = p.color;
+    ctx.arc(p.x, p.y, p.r * (1 - age), 0, Math.PI*2);
+    ctx.fill();
+  }
+  ctx.globalAlpha = 1;
+}
+
+// ------------------ Oyun mantığı ------------------
+function resetGame(){
+  COLS = Math.floor(canvas.width / CELL_SIZE);
+  ROWS = Math.floor(canvas.height / CELL_SIZE);
+  snake = [{x: Math.floor(COLS/2), y: Math.floor(ROWS/2)}];
+  dir = {x:1,y:0}; nextDir = dir;
+  score = 0; scoreEl.textContent = 0;
+  food = null; particles = [];
+  foodCollected = 0; foodCountEl.textContent = 0;
+  tickInterval = 1200 / speedRange.value;
+  lastTick = performance.now();
+  placeFood();
+}
+
+function step(){
+  // yön güncelle
+  dir = nextDir;
+  const head = {x: snake[0].x + dir.x, y: snake[0].y + dir.y};
+
+  // sınır kontrolu
+  if(head.x < 0 || head.x >= COLS || head.y < 0 || head.y >= ROWS){
+    return gameOver();
+  }
+
+  // kendine çarpma
+  for(let i=0;i<snake.length;i++){
+    if(snake[i].x === head.x && snake[i].y === head.y){
+      return gameOver();
+    }
+  }
+
+  // ilerle
+  snake.unshift(head);
+
+  // yemek bulma
+  if(food && head.x === food.x && head.y === food.y){
+    score += 10;
+    scoreEl.textContent = score;
+    // görsel efekt
+    spawnParticles(head.x*CELL_SIZE, head.y*CELL_SIZE, 'rgba(255,209,102,0.95)');
+    placeFood();
+    // hız artışı hafif
+    tickInterval = Math.max(40, tickInterval * 0.96);
+    return;
+  }
+
+  // normal: kuyruk pop
+  snake.pop();
+}
+
+function gameOver(){
+  running = false;
+  // küçük patlama
+  if(snake[0]) spawnParticles(snake[0].x*CELL_SIZE, snake[0].y*CELL_SIZE, 'rgba(255,80,80,0.95)');
+  // yüksek skor kaydet
+  if(score > best){
+    best = score;
+    localStorage.setItem('snakeBestV1', best);
+    bestEl.textContent = best;
+  }
+  // basit animasyon: yılan kırmızı yanıp söner
+  flashGameOver();
+}
+
+function flashGameOver(){
+  let flashes = 0;
+  const orig = ctx.getImageData(0,0,canvas.width,canvas.height);
+  const id = setInterval(()=>{
+    flashes++;
+    if(flashes % 2 === 1){
+      ctx.fillStyle = 'rgba(160,20,20,0.15)';
+      ctx.fillRect(0,0,canvas.width,canvas.height);
+    } else {
+      ctx.putImageData(orig,0,0);
+    }
+    if(flashes > 5){
+      clearInterval(id);
+      // otomatik tekrar başlatma yok, kullanıcı basacak
+    }
+  },120);
+}
+
+// ------------------ Çizim döngüsü ------------------
+function drawGrid(){
+  // soft grid
+  ctx.save();
+  for(let x=0;x<=COLS;x++){
+    ctx.globalAlpha = x % 5 === 0 ? 0.06 : 0.03;
+    ctx.fillStyle = 'rgba(255,255,255,1)';
+    ctx.fillRect(x*CELL_SIZE, 0, 1, canvas.height);
+  }
+  for(let y=0;y<=ROWS;y++){
+    ctx.globalAlpha = y % 5 === 0 ? 0.06 : 0.03;
+    ctx.fillStyle = 'rgba(255,255,255,1)';
+    ctx.fillRect(0, y*CELL_SIZE, canvas.width, 1);
+  }
+  ctx.restore();
+}
+
+function draw(){
+  // temizle
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+
+  // arkaplan glow
+  const g = ctx.createLinearGradient(0,0,canvas.width,canvas.height);
+  g.addColorStop(0, 'rgba(6,22,36,1)');
+  g.addColorStop(1, 'rgba(8,30,44,1)');
+  ctx.fillStyle = g;
+  ctx.fillRect(0,0,canvas.width,canvas.height);
+
+  drawGrid();
+
+  // draw food with shine
+  if(food){
+    const fx = food.x*CELL_SIZE, fy = food.y*CELL_SIZE;
+    // halo
+    ctx.save();
+    ctx.globalAlpha = 0.14 + 0.04*Math.sin(performance.now()/200);
+    ctx.beginPath();
+    ctx.ellipse(fx+CELL_SIZE/2, fy+CELL_SIZE/2, CELL_SIZE*0.9, CELL_SIZE*0.6, 0, 0, Math.PI*2);
+    ctx.fillStyle = 'rgba(255,220,120,0.12)';
+    ctx.fill();
+    ctx.restore();
+    // main body (gradient)
+    const gg = ctx.createLinearGradient(fx,fy,fx+CELL_SIZE,fy+CELL_SIZE);
+    gg.addColorStop(0,'#ffd166');
+    gg.addColorStop(1,'#ffb703');
+    drawRoundedCell(food.x, food.y, CELL_SIZE, 6, gg, 'rgba(0,0,0,0.12)');
+    // sparkle
+    ctx.save();
+    ctx.globalAlpha = 0.9;
+    ctx.fillStyle = 'rgba(255,255,255,0.6)';
+    ctx.fillRect(fx+CELL_SIZE*0.6, fy+CELL_SIZE*0.18, 2, 8);
+    ctx.restore();
+  }
+
+  // draw snake with gradient by index
+  for(let i=snake.length-1;i>=0;i--){
+    const s = snake[i];
+    const t = i / Math.max(1, snake.length-1);
+    // renk: kuyruktan başa doğru değişim
+    const r1 = lerpColor({r:4,g:120,b:140},{r:5,g:220,b:160}, t);
+    const r2 = lerpColor({r:2,g:60,b:80},{r:10,g:180,b:120}, t);
+    const grad = ctx.createLinearGradient(s.x*CELL_SIZE, s.y*CELL_SIZE, (s.x+1)*CELL_SIZE, (s.y+1)*CELL_SIZE);
+    grad.addColorStop(0, `rgb(${r1.r},${r1.g},${r1.b})`);
+    grad.addColorStop(1, `rgb(${r2.r},${r2.g},${r2.b})`);
+    drawRoundedCell(s.x, s.y, CELL_SIZE, 6, grad, 'rgba(0,0,0,0.12)');
+  }
+
+  // head highlight
+  if(snake[0]){
+    const h = snake[0];
+    ctx.save();
+    ctx.globalAlpha = 0.18;
+    ctx.fillStyle = 'white';
+    ctx.beginPath();
+    ctx.ellipse(h.x*CELL_SIZE + CELL_SIZE*0.55, h.y*CELL_SIZE + CELL_SIZE*0.35, CELL_SIZE*0.18, CELL_SIZE*0.12, -0.2, 0, Math.PI*2);
+    ctx.fill();
+    ctx.restore();
+  }
+
+  drawParticles();
+}
+
+function lerpColor(a,b,t){
+  return {
+    r: Math.round(a.r + (b.r-a.r)*t),
+    g: Math.round(a.g + (b.g-a.g)*t),
+    b: Math.round(a.b + (b.b-a.b)*t)
+  }
+}
+
+// ------------------ Oyun döngüsü ------------------
+let lastFrame = performance.now();
+function loop(now){
+  const dt = now - lastFrame;
+  lastFrame = now;
+
+  if(running && !paused){
+    // hareket tick
+    if(now - lastTick > tickInterval){
+      lastTick = now;
+      step();
+    }
+  }
+
+  updateParticles(dt);
+  draw();
+
+  requestAnimationFrame(loop);
+}
+requestAnimationFrame(loop);
+
+// ------------------ Input ------------------
+window.addEventListener('keydown', (e)=>{
+  if(['ArrowUp','ArrowDown','ArrowLeft','ArrowRight','w','a','s','d','W','A','S','D'].includes(e.key)){
+    e.preventDefault();
+  }
+  handleKey(e.key);
+});
+
+function handleKey(key){
+  if(key === 'ArrowUp' || key==='w' || key==='W') trySetDir(0,-1);
+  if(key === 'ArrowDown' || key==='s' || key==='S') trySetDir(0,1);
+  if(key === 'ArrowLeft' || key==='a' || key==='A') trySetDir(-1,0);
+  if(key === 'ArrowRight' || key==='d' || key==='D') trySetDir(1,0);
+  if(key === ' '){ // space to start
+    if(!running) startGame();
+    else { paused = !paused; updateButtons(); }
+  }
+  if(key === 'p' || key === 'P'){ paused = !paused; updateButtons(); }
+}
+
+function trySetDir(x,y){
+  // tersine gitmeyi engelle
+  if(!dir) { nextDir = {x,y}; return; }
+  if(dir.x === -x && dir.y === -y) return;
+  if(dir.x === x && dir.y === y) return;
+  nextDir = {x,y};
+}
+
+// touch controls (swipe)
+let touchStart = null;
+canvas.addEventListener('touchstart', (e)=>{
+  if(e.touches.length === 1){
+    const t = e.touches[0];
+    touchStart = {x:t.clientX, y:t.clientY, time: Date.now()};
+  }
+}, {passive:true});
+
+canvas.addEventListener('touchmove', (e)=>{
+  if(!touchStart) return;
+  const t = e.touches[0];
+  const dx = t.clientX - touchStart.x;
+  const dy = t.clientY - touchStart.y;
+  if(Math.abs(dx) > 30 || Math.abs(dy) > 30){
+    if(Math.abs(dx) > Math.abs(dy)){
+      trySetDir(dx>0?1:-1, 0);
+    } else {
+      trySetDir(0, dy>0?1:-1);
+    }
+    touchStart = null;
+  }
+}, {passive:true});
+
+canvas.addEventListener('touchend', ()=>{ touchStart = null });
+
+// sidebar touch buttons
+['up','down','left','right'].forEach(id=>{
+  const el = document.getElementById(id);
+  if(!el) return;
+  el.addEventListener('click', ()=> {
+    if(id==='up') trySetDir(0,-1);
+    if(id==='down') trySetDir(0,1);
+    if(id==='left') trySetDir(-1,0);
+    if(id==='right') trySetDir(1,0);
+  })
+});
+
+// ------------------ UI butonları ------------------
+startBtn.addEventListener('click', ()=> {
+  if(!running) startGame();
+  else { resetGame(); running=true; paused=false; updateButtons(); }
+});
+pauseBtn.addEventListener('click', ()=> {
+  paused = !paused;
+  updateButtons();
+});
+
+speedRange.addEventListener('input', ()=>{
+  tickInterval = 1200 / speedRange.value;
+});
+
+function updateButtons(){
+  if(!running){
+    startBtn.textContent = 'Başlat';
+    pauseBtn.textContent = 'Duraklat';
+  } else {
+    startBtn.textContent = 'Yeniden';
+    pauseBtn.textContent = paused ? 'Devam Et' : 'Duraklat';
+  }
+}
+
+// ------------------ Start/Init ------------------
+function startGame(){
+  resetGame();
+  running = true;
+  paused = false;
+  lastTick = performance.now();
+  updateButtons();
+}
+
+// başlatmadan önce küçük gösterim yılanı
+(function prefill(){
+  snake = [
+    {x: Math.floor(COLS/2)-2, y: Math.floor(ROWS/2)},
+    {x: Math.floor(COLS/2)-1, y: Math.floor(ROWS/2)},
+    {x: Math.floor(COLS/2), y: Math.floor(ROWS/2)}
+  ];
+  placeFood();
+})();
+
+// prevent accidental scroll on arrow keys in some browsers
+window.addEventListener('keydown', function(e){
+  if(['ArrowUp','ArrowDown','ArrowLeft','ArrowRight',' '].includes(e.key)) e.preventDefault();
+}, false);
+
+// Optional: tap/click canvas to start
+canvas.addEventListener('click', ()=>{ if(!running) startGame(); });
+
+// small debug: adapt grid size if canvas internal resolution changed
+(function adaptGrid(){
+  // set canvas internal size to 600 x 600 for crispness but if you want to change, adjust CELL_SIZE
+  // nothing to do here for now
+})();
+
+</script>
+</body>
+</html>
