@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8" />
+  <title>YİĞİTİN İFŞASI</title>
+  <style>
+    html, body {
+      margin: 0; padding: 0; height: 100%; background: black; display: flex; justify-content: center; align-items: center; color: white; font-family: Arial, sans-serif;
+    }
+    #startBtn {
+      padding: 15px 30px;
+      font-size: 24px;
+      cursor: pointer;
+      border: none;
+      border-radius: 8px;
+      background-color: #4caf50;
+      color: white;
+      transition: background-color 0.3s;
+    }
+    #startBtn:hover {
+      background-color: #45a049;
+    }
+    video {
+      display: none;
+      position: fixed;
+      top: 50%; left: 50%;
+      min-width: 100%; min-height: 100%;
+      width: auto; height: auto;
+      transform: translate(-50%, -50%);
+      object-fit: cover;
+      z-index: 1;
+    }
+  </style>
+</head>
+<body>
+
+  <button id="startBtn">Yiğitin ifşasını görmek için tıklayın.</button>
+
+  <video id="myVideo" playsinline loop>
+    <source src="yigit.mp4" type="video/mp4" />
+    Tarayıcınız video etiketini desteklemiyor.
+  </video>
+
+  <script>
+    const startBtn = document.getElementById('startBtn');
+    const video = document.getElementById('myVideo');
+
+    startBtn.addEventListener('click', () => {
+      startBtn.style.display = 'none';
+      video.style.display = 'block';
+      video.volume = 1.0;
+      video.play();
+
+      // Tam ekran yapmaya çalış
+      if (video.requestFullscreen) {
+        video.requestFullscreen();
+      } else if (video.webkitRequestFullscreen) {
+        video.webkitRequestFullscreen();
+      } else if (video.msRequestFullscreen) {
+        video.msRequestFullscreen();
+      }
+    });
+  </script>
+
+</body>
+</html>
