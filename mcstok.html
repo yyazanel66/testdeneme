@@ -2,114 +2,76 @@
 <html lang="tr">
 <head>
 <meta charset="UTF-8">
-<title>Pixel Market</title>
+<title>Stok Listesi</title>
 
 <style>
-/* Minecraft tarzı pixel arkaplan */
 body {
-    margin: 0;
-    font-family: Arial, sans-serif;
-    background:
-        linear-gradient(90deg, #7ec850 25%, transparent 25%) -25px 0,
-        linear-gradient(#7ec850 25%, transparent 25%) 0 -25px,
-        linear-gradient(90deg, #6bb040 25%, transparent 25%) -25px 0,
-        linear-gradient(#6bb040 25%, transparent 25%) 0 -25px;
-    background-size: 50px 50px;
-    background-color: #8fd14f;
+  font-family: Arial, sans-serif;
+  background: #121212;
+  color: #fff;
+  padding: 20px;
 }
-
 h1 {
-    text-align: center;
-    padding: 20px;
-    color: white;
-    text-shadow: 2px 2px #000;
+  text-align: center;
 }
-
-.container {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(250px,1fr));
-    gap: 20px;
-    padding: 20px;
+.product {
+  background: #1e1e1e;
+  border-radius: 5px;
+  margin: 10px 0;
+  padding: 15px;
+  display: flex;
+  justify-content: space-between;
+  border-left: 5px solid #4CAF50;
 }
-
-.card {
-    background: #fdfdfd;
-    border: 4px solid #5a5a5a;
-    border-radius: 8px;
-    padding: 10px;
-    box-shadow: 4px 4px #333;
-    text-align: center;
-}
-
-.card img {
-    width: 100%;
-    height: 180px;
-    object-fit: cover;
-    border: 3px solid #444;
-}
-
-.price {
-    font-size: 18px;
-    font-weight: bold;
-}
-
-button {
-    margin-top: 10px;
-    padding: 10px;
-    width: 100%;
-    font-size: 16px;
-    border: 3px solid #333;
-    background: #4caf50;
-    color: white;
-    cursor: pointer;
-}
-
-button:disabled {
-    background: gray;
-    cursor: not-allowed;
+.out {
+  border-left-color: #f44336;
 }
 </style>
 </head>
 
 <body>
 
-<h1>🟩 Pixel Market 🟩</h1>
-<div class="container" id="urunler"></div>
+<h1>📦 Stok Listesi</h1>
+<div id="products">Yükleniyor...</div>
 
 <script>
-const sheetURL = "https://docs.google.com/spreadsheets/d/16EWtty8hxayJgQJaATyK4mheVe1qnfHDD5qSfEz2G_g/gviz/tq?tqx=out:csv";
+// Senin CSV link’in 👇
+const sheetCSV =
+"https://docs.google.com/spreadsheets/d/e/2PACX-1vS-jXFxD-NlBQCr9KtADlRIeYS7eSB97UMdBw2Hysty_mGU15xETOqOI6CFaqCut0R-7s3lu8iMKEq_/pub?output=csv";
 
-fetch(sheetURL)
-.then(res => res.text())
-.then(text => {
-    const rows = text.trim().split("\n").slice(1);
-    const container = document.getElementById("urunler");
+fetch(sheetCSV)
+  .then(res => res.text())
+  .then(csv => {
+    const rows = csv.trim().split("\n").map(r => r.split(","));
+    const container = document.getElementById("products");
+    container.innerHTML = "";
 
-    rows.forEach(row => {
-        const cols = row.split(",");
-        const urun = cols[1];
-        const fiyat = cols[2];
-        const stok = cols[3];
-        const resim = cols[4];
+    // Başlık varsa atlar
+    rows.slice(1).forEach(r => {
+      const name = r[0] || "";
+      const stock = r[1] || "";
 
-        if(!urun) return;
+      const div = document.createElement("div");
+      div.className = "product";
 
-        const card = document.createElement("div");
-        card.className = "card";
+      // stok 0 ise kırmızı göster
+      if (parseInt(stock) <= 0) {
+        div.classList.add("out");
+      }
 
-        card.innerHTML = `
-            <img src="${resim}">
-            <h3>${urun}</h3>
-            <p class="price">${fiyat} ₺</p>
-            <p>Stok: ${stok}</p>
-            <button ${stok <= 0 ? "disabled" : ""}>
-                ${stok <= 0 ? "Stokta Yok" : "Satın Al"}
-            </button>
-        `;
-
-        container.appendChild(card);
+      div.innerHTML = `
+        <span>${name}</span>
+        <span>${stock > 0 ? stock + " adet" : "❌ Stok yok"}</span>
+      `;
+      container.appendChild(div);
     });
-});
+
+  })
+  .catch(e => {
+    document.getElementById("products").innerText =
+      "Veri çekilirken hata oldu.";
+    console.error(e);
+  });
 </script>
 
 </body>
