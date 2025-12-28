@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<title>Pixel Market</title>
+
+<style>
+/* Minecraft tarzı pixel arkaplan */
+body {
+    margin: 0;
+    font-family: Arial, sans-serif;
+    background:
+        linear-gradient(90deg, #7ec850 25%, transparent 25%) -25px 0,
+        linear-gradient(#7ec850 25%, transparent 25%) 0 -25px,
+        linear-gradient(90deg, #6bb040 25%, transparent 25%) -25px 0,
+        linear-gradient(#6bb040 25%, transparent 25%) 0 -25px;
+    background-size: 50px 50px;
+    background-color: #8fd14f;
+}
+
+h1 {
+    text-align: center;
+    padding: 20px;
+    color: white;
+    text-shadow: 2px 2px #000;
+}
+
+.container {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px,1fr));
+    gap: 20px;
+    padding: 20px;
+}
+
+.card {
+    background: #fdfdfd;
+    border: 4px solid #5a5a5a;
+    border-radius: 8px;
+    padding: 10px;
+    box-shadow: 4px 4px #333;
+    text-align: center;
+}
+
+.card img {
+    width: 100%;
+    height: 180px;
+    object-fit: cover;
+    border: 3px solid #444;
+}
+
+.price {
+    font-size: 18px;
+    font-weight: bold;
+}
+
+button {
+    margin-top: 10px;
+    padding: 10px;
+    width: 100%;
+    font-size: 16px;
+    border: 3px solid #333;
+    background: #4caf50;
+    color: white;
+    cursor: pointer;
+}
+
+button:disabled {
+    background: gray;
+    cursor: not-allowed;
+}
+</style>
+</head>
+
+<body>
+
+<h1>🟩 Pixel Market 🟩</h1>
+<div class="container" id="urunler"></div>
+
+<script>
+const sheetURL = "https://docs.google.com/spreadsheets/d/16EWtty8hxayJgQJaATyK4mheVe1qnfHDD5qSfEz2G_g/gviz/tq?tqx=out:csv";
+
+fetch(sheetURL)
+.then(res => res.text())
+.then(text => {
+    const rows = text.trim().split("\n").slice(1);
+    const container = document.getElementById("urunler");
+
+    rows.forEach(row => {
+        const cols = row.split(",");
+        const urun = cols[1];
+        const fiyat = cols[2];
+        const stok = cols[3];
+        const resim = cols[4];
+
+        if(!urun) return;
+
+        const card = document.createElement("div");
+        card.className = "card";
+
+        card.innerHTML = `
+            <img src="${resim}">
+            <h3>${urun}</h3>
+            <p class="price">${fiyat} ₺</p>
+            <p>Stok: ${stok}</p>
+            <button ${stok <= 0 ? "disabled" : ""}>
+                ${stok <= 0 ? "Stokta Yok" : "Satın Al"}
+            </button>
+        `;
+
+        container.appendChild(card);
+    });
+});
+</script>
+
+</body>
+</html>
