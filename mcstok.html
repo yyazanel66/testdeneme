@@ -60,9 +60,23 @@ button:disabled {
   background: #555;
   cursor: not-allowed;
 }
+
 .cart-item {
-  font-size: 14px;
-  margin-bottom: 8px;
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  margin-bottom: 10px;
+}
+.cart-item img {
+  width: 40px;
+  height: 40px;
+  object-fit: cover;
+  border-radius: 4px;
+}
+.remove {
+  background: #f44336;
+  color: #fff;
+  padding: 4px 8px;
 }
 .total {
   margin-top: 10px;
@@ -99,7 +113,6 @@ const sheetCSV =
 "https://docs.google.com/spreadsheets/d/e/2PACX-1vS-jXFxD-NlBQCr9KtADlRIeYS7eSB97UMdBw2Hysty_mGU15xETOqOI6CFaqCut0R-7s3lu8iMKEq_/pub?output=csv";
 
 let cart = [];
-let total = 0;
 
 function renderCart() {
   const cartDiv = document.getElementById("cartItems");
@@ -112,21 +125,36 @@ function renderCart() {
     return;
   }
 
-  cart.forEach(i => {
+  let total = 0;
+
+  cart.forEach((item, index) => {
+    total += item.price;
+
     const div = document.createElement("div");
     div.className = "cart-item";
-    div.innerText = `• ${i.name} (${i.price} ₺)`;
+    div.innerHTML = `
+      <img src="${item.img}">
+      <div style="flex:1">
+        ${item.name}<br>
+        ${item.price} ₺
+      </div>
+      <button class="remove">❌</button>
+    `;
+
+    div.querySelector(".remove").onclick = () => {
+      cart.splice(index, 1);
+      renderCart();
+    };
+
     cartDiv.appendChild(div);
   });
 
   totalDiv.innerText = "Toplam: " + total + " ₺";
 }
 
-function addToCart(name, price) {
-  cart.push({ name, price });
-  total += price;
+function addToCart(name, price, img) {
+  cart.push({ name, price, img });
   renderCart();
-  alert("Satın almak için Discord: ysfyznl");
 }
 
 function buy() {
@@ -134,7 +162,7 @@ function buy() {
     alert("Sepet boş");
     return;
   }
-  alert("Satın almak için Discord: ysfyznl");
+  window.open("https://discord.com/users/ysfyznl", "_blank");
 }
 
 fetch(sheetCSV)
@@ -166,7 +194,7 @@ fetch(sheetCSV)
 
       if (stock > 0) {
         div.querySelector("button").onclick = () =>
-          addToCart(name, price);
+          addToCart(name, price, img);
       }
 
       container.appendChild(div);
