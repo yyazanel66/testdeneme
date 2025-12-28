@@ -2,42 +2,140 @@
 <html lang="tr">
 <head>
 <meta charset="UTF-8">
-<title>Stok Listesi</title>
+<title>Satış Sitesi</title>
 
 <style>
 body {
+  margin: 0;
   font-family: Arial, sans-serif;
   background: #121212;
   color: #fff;
+}
+.container {
+  display: flex;
+}
+.products {
+  flex: 3;
   padding: 20px;
 }
-h1 {
-  text-align: center;
+.cart {
+  flex: 1;
+  background: #1b1b1b;
+  padding: 20px;
+  border-left: 2px solid #333;
 }
 .product {
   background: #1e1e1e;
-  border-radius: 5px;
-  margin: 10px 0;
+  border-radius: 6px;
+  margin-bottom: 15px;
   padding: 15px;
   display: flex;
-  justify-content: space-between;
+  gap: 15px;
+  align-items: center;
   border-left: 5px solid #4CAF50;
 }
-.out {
+.product.out {
   border-left-color: #f44336;
+  opacity: 0.6;
+}
+.product img {
+  width: 90px;
+  height: 90px;
+  object-fit: cover;
+  border-radius: 6px;
+}
+.price {
+  color: #ffcc00;
+  font-weight: bold;
+}
+button {
+  padding: 8px 12px;
+  background: #4CAF50;
+  color: #000;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+button:disabled {
+  background: #555;
+  cursor: not-allowed;
+}
+.cart-item {
+  font-size: 14px;
+  margin-bottom: 8px;
+}
+.total {
+  margin-top: 10px;
+  font-weight: bold;
+}
+.buy {
+  width: 100%;
+  margin-top: 15px;
+  background: #ff9800;
 }
 </style>
 </head>
 
 <body>
 
-<h1>📦 Stok Listesi</h1>
-<div id="products">Yükleniyor...</div>
+<div class="container">
+
+  <div class="products">
+    <h1>🛒 Ürünler</h1>
+    <div id="products">Yükleniyor...</div>
+  </div>
+
+  <div class="cart">
+    <h2>🧺 Sepet</h2>
+    <div id="cartItems">Sepet boş</div>
+    <div class="total" id="total"></div>
+    <button class="buy" onclick="buy()">Satın Al</button>
+  </div>
+
+</div>
 
 <script>
-// Senin CSV link’in 👇
 const sheetCSV =
 "https://docs.google.com/spreadsheets/d/e/2PACX-1vS-jXFxD-NlBQCr9KtADlRIeYS7eSB97UMdBw2Hysty_mGU15xETOqOI6CFaqCut0R-7s3lu8iMKEq_/pub?output=csv";
+
+let cart = [];
+let total = 0;
+
+function renderCart() {
+  const cartDiv = document.getElementById("cartItems");
+  const totalDiv = document.getElementById("total");
+  cartDiv.innerHTML = "";
+
+  if (cart.length === 0) {
+    cartDiv.innerText = "Sepet boş";
+    totalDiv.innerText = "";
+    return;
+  }
+
+  cart.forEach(i => {
+    const div = document.createElement("div");
+    div.className = "cart-item";
+    div.innerText = `• ${i.name} (${i.price} ₺)`;
+    cartDiv.appendChild(div);
+  });
+
+  totalDiv.innerText = "Toplam: " + total + " ₺";
+}
+
+function addToCart(name, price) {
+  cart.push({ name, price });
+  total += price;
+  renderCart();
+  alert("Satın almak için Discord: ysfyznl");
+}
+
+function buy() {
+  if (cart.length === 0) {
+    alert("Sepet boş");
+    return;
+  }
+  alert("Satın almak için Discord: ysfyznl");
+}
 
 fetch(sheetCSV)
   .then(res => res.text())
@@ -46,31 +144,33 @@ fetch(sheetCSV)
     const container = document.getElementById("products");
     container.innerHTML = "";
 
-    // Başlık varsa atlar
     rows.slice(1).forEach(r => {
-      const name = r[0] || "";
-      const stock = r[1] || "";
+      const name = r[0];
+      const stock = parseInt(r[1]);
+      const price = parseInt(r[2]);
+      const img = r[3];
 
       const div = document.createElement("div");
       div.className = "product";
-
-      // stok 0 ise kırmızı göster
-      if (parseInt(stock) <= 0) {
-        div.classList.add("out");
-      }
+      if (stock <= 0) div.classList.add("out");
 
       div.innerHTML = `
-        <span>${name}</span>
-        <span>${stock > 0 ? stock + " adet" : "❌ Stok yok"}</span>
+        <img src="${img}">
+        <div style="flex:1">
+          <strong>${name}</strong><br>
+          <span class="price">${price} ₺</span><br>
+          ${stock > 0 ? stock + " adet" : "❌ Stok yok"}
+        </div>
+        <button ${stock <= 0 ? "disabled" : ""}>Sepete Ekle</button>
       `;
+
+      if (stock > 0) {
+        div.querySelector("button").onclick = () =>
+          addToCart(name, price);
+      }
+
       container.appendChild(div);
     });
-
-  })
-  .catch(e => {
-    document.getElementById("products").innerText =
-      "Veri çekilirken hata oldu.";
-    console.error(e);
   });
 </script>
 
