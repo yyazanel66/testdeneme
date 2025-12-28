@@ -11,13 +11,8 @@ body {
   background: #121212;
   color: #fff;
 }
-.container {
-  display: flex;
-}
-.products {
-  flex: 3;
-  padding: 20px;
-}
+.container { display: flex; }
+.products { flex: 3; padding: 20px; }
 .cart {
   flex: 1;
   background: #1b1b1b;
@@ -36,7 +31,7 @@ body {
 }
 .product.out {
   border-left-color: #f44336;
-  opacity: 0.6;
+  opacity: .6;
 }
 .product img {
   width: 90px;
@@ -44,22 +39,23 @@ body {
   object-fit: cover;
   border-radius: 6px;
 }
-.price {
-  color: #ffcc00;
-  font-weight: bold;
+.price { color: #ffcc00; font-weight: bold; }
+
+select {
+  padding: 5px;
+  background: #222;
+  color: #fff;
+  border: 1px solid #444;
 }
+
 button {
   padding: 8px 12px;
   background: #4CAF50;
-  color: #000;
   border: none;
   border-radius: 4px;
   cursor: pointer;
 }
-button:disabled {
-  background: #555;
-  cursor: not-allowed;
-}
+button:disabled { background: #555; }
 
 .cart-item {
   display: flex;
@@ -78,10 +74,7 @@ button:disabled {
   color: #fff;
   padding: 4px 8px;
 }
-.total {
-  margin-top: 10px;
-  font-weight: bold;
-}
+.total { margin-top: 10px; font-weight: bold; }
 .buy {
   width: 100%;
   margin-top: 15px;
@@ -94,17 +87,17 @@ button:disabled {
 
 <div class="container">
 
-  <div class="products">
-    <h1>🛒 Ürünler</h1>
-    <div id="products">Yükleniyor...</div>
-  </div>
+<div class="products">
+  <h1>🛒 Ürünler</h1>
+  <div id="products">Yükleniyor...</div>
+</div>
 
-  <div class="cart">
-    <h2>🧺 Sepet</h2>
-    <div id="cartItems">Sepet boş</div>
-    <div class="total" id="total"></div>
-    <button class="buy" onclick="buy()">Satın Al</button>
-  </div>
+<div class="cart">
+  <h2>🧺 Sepet</h2>
+  <div id="cartItems">Sepet boş</div>
+  <div class="total" id="total"></div>
+  <button class="buy" onclick="buy()">Satın Al</button>
+</div>
 
 </div>
 
@@ -127,8 +120,8 @@ function renderCart() {
 
   let total = 0;
 
-  cart.forEach((item, index) => {
-    total += item.price;
+  cart.forEach((item, i) => {
+    total += item.price * item.qty;
 
     const div = document.createElement("div");
     div.className = "cart-item";
@@ -136,13 +129,13 @@ function renderCart() {
       <img src="${item.img}">
       <div style="flex:1">
         ${item.name}<br>
-        ${item.price} ₺
+        ${item.qty} x ${item.price} ₺
       </div>
       <button class="remove">❌</button>
     `;
 
     div.querySelector(".remove").onclick = () => {
-      cart.splice(index, 1);
+      cart.splice(i, 1);
       renderCart();
     };
 
@@ -152,8 +145,8 @@ function renderCart() {
   totalDiv.innerText = "Toplam: " + total + " ₺";
 }
 
-function addToCart(name, price, img) {
-  cart.push({ name, price, img });
+function addToCart(name, price, img, qty) {
+  cart.push({ name, price, img, qty });
   renderCart();
 }
 
@@ -166,40 +159,48 @@ function buy() {
 }
 
 fetch(sheetCSV)
-  .then(res => res.text())
-  .then(csv => {
-    const rows = csv.trim().split("\n").map(r => r.split(","));
-    const container = document.getElementById("products");
-    container.innerHTML = "";
+.then(r => r.text())
+.then(csv => {
+  const rows = csv.trim().split("\n").map(r => r.split(","));
+  const container = document.getElementById("products");
+  container.innerHTML = "";
 
-    rows.slice(1).forEach(r => {
-      const name = r[0];
-      const stock = parseInt(r[1]);
-      const price = parseInt(r[2]);
-      const img = r[3];
+  rows.slice(1).forEach(r => {
+    const name = r[0];
+    const stock = parseInt(r[1]);
+    const price = parseInt(r[2]);
+    const img = r[3];
 
-      const div = document.createElement("div");
-      div.className = "product";
-      if (stock <= 0) div.classList.add("out");
+    const div = document.createElement("div");
+    div.className = "product";
+    if (stock <= 0) div.classList.add("out");
 
-      div.innerHTML = `
-        <img src="${img}">
-        <div style="flex:1">
-          <strong>${name}</strong><br>
-          <span class="price">${price} ₺</span><br>
-          ${stock > 0 ? stock + " adet" : "❌ Stok yok"}
-        </div>
-        <button ${stock <= 0 ? "disabled" : ""}>Sepete Ekle</button>
-      `;
+    div.innerHTML = `
+      <img src="${img}">
+      <div style="flex:1">
+        <strong>${name}</strong><br>
+        <span class="price">${price} ₺</span><br>
+        ${stock > 0 ? stock + " adet" : "❌ Stok yok"}<br><br>
+        <select>
+          <option value="1">1</option>
+          <option value="5">5</option>
+          <option value="10">10</option>
+          <option value="100">100</option>
+          <option value="1000">1000</option>
+        </select>
+      </div>
+      <button ${stock <= 0 ? "disabled" : ""}>Sepete Ekle</button>
+    `;
 
-      if (stock > 0) {
-        div.querySelector("button").onclick = () =>
-          addToCart(name, price, img);
-      }
+    if (stock > 0) {
+      const select = div.querySelector("select");
+      div.querySelector("button").onclick = () =>
+        addToCart(name, price, img, parseInt(select.value));
+    }
 
-      container.appendChild(div);
-    });
+    container.appendChild(div);
   });
+});
 </script>
 
 </body>
